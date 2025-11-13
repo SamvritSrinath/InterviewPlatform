@@ -1,65 +1,169 @@
-import Image from "next/image";
+'use client';
 
-export default function Home() {
+import {
+  Container,
+  Typography,
+  Box,
+  Grid,
+  Card,
+  CardContent,
+  CardActions,
+} from '@mui/material';
+import {Code, Assessment, Security} from '@mui/icons-material';
+import {LinkButton} from '@/components/link-button';
+import {useAuth} from '@/lib/supabase/auth-context';
+
+export default function HomePage() {
+  const {user, loading} = useAuth();
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex min-h-screen w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+    <Container maxWidth="lg" sx={{py: {xs: 6, sm: 8, md: 10}}}>
+      <Box sx={{textAlign: 'center', mb: {xs: 8, sm: 10, md: 12}}}>
+        <Typography
+          variant="h2"
+          component="h1"
+          gutterBottom
+          sx={{
+            fontWeight: 700,
+            mb: 2,
+          }}>
+          291Y Interview Platform
+        </Typography>
+        <Typography
+          variant="h5"
+          color="text.secondary"
+          paragraph
+          sx={{
+            maxWidth: 700,
+            mx: 'auto',
+          }}>
+          Modern LeetCode-style platform with cheating detection for interview
+          environments
+        </Typography>
+      </Box>
+
+      <Grid container spacing={4} sx={{mb: {xs: 8, sm: 10, md: 12}}}>
+        <Grid item xs={12} sm={6} md={4}>
+          <Card
+            elevation={2}
+            sx={{
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: 4,
+              },
+            }}>
+            <CardContent sx={{flexGrow: 1}}>
+              <Code sx={{fontSize: 48, color: 'primary.main', mb: 2}} />
+              <Typography
+                variant="h5"
+                component="h2"
+                gutterBottom
+                sx={{fontWeight: 600}}>
+                Problem Repository
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Browse and solve coding problems. Practice with Python code
+                editor and test your solutions.
+              </Typography>
+            </CardContent>
+            <CardActions sx={{px: 2, pb: 2}}>
+              <LinkButton size="small" href="/problems">
+                View Problems
+              </LinkButton>
+            </CardActions>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={4}>
+          <Card
+            elevation={2}
+            sx={{
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: 4,
+              },
+            }}>
+            <CardContent sx={{flexGrow: 1}}>
+              <Assessment sx={{fontSize: 48, color: 'primary.main', mb: 2}} />
+              <Typography
+                variant="h5"
+                component="h2"
+                gutterBottom
+                sx={{fontWeight: 600}}>
+                Interview Platform
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Conduct or participate in coding interviews with real-time
+                monitoring and cheating detection.
+              </Typography>
+            </CardContent>
+            <CardActions sx={{px: 2, pb: 2}}>
+              <LinkButton size="small" href="/interview">
+                Start Interview
+              </LinkButton>
+            </CardActions>
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} sm={6} md={4}>
+          <Card
+            elevation={2}
+            sx={{
+              height: '100%',
+              display: 'flex',
+              flexDirection: 'column',
+              transition: 'transform 0.2s, box-shadow 0.2s',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: 4,
+              },
+            }}>
+            <CardContent sx={{flexGrow: 1}}>
+              <Security sx={{fontSize: 48, color: 'primary.main', mb: 2}} />
+              <Typography
+                variant="h5"
+                component="h2"
+                gutterBottom
+                sx={{fontWeight: 600}}>
+                Security & Monitoring
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                Advanced cheating detection with real-time alerts, IP tracking,
+                and behavior analysis.
+              </Typography>
+            </CardContent>
+            <CardActions sx={{px: 2, pb: 2}}>
+              <LinkButton size="small" href="/dashboard">
+                Dashboard
+              </LinkButton>
+            </CardActions>
+          </Card>
+        </Grid>
+      </Grid>
+
+      {/* Only show Login and Signup buttons if user is not logged in */}
+      {!loading && !user && (
+        <Box sx={{textAlign: 'center', mt: {xs: 6, sm: 8}}}>
+          <LinkButton
+            variant="contained"
+            size="large"
+            href="/login"
+            sx={{mr: 2, mb: {xs: 2, sm: 0}}}>
+            Login
+          </LinkButton>
+          <LinkButton variant="outlined" size="large" href="/signup">
+            Sign Up
+          </LinkButton>
+        </Box>
+      )}
+    </Container>
   );
 }
