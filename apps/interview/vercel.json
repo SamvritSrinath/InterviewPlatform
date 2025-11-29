@@ -1,4 +1,0 @@
-{
-  "buildCommand": "cd ../.. && turbo run build --filter=interview",
-  "installCommand": "cd ../.. && npm install"
-}
