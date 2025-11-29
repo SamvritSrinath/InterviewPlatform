@@ -24,7 +24,7 @@
     "affected:test": "nx affected --target=test",
     "graph": "nx graph",
     "clean": "nx reset && rm -rf .nx node_modules apps/*/node_modules packages/*/node_modules",
-    "postinstall": "npx --yes nx run-many --target=build --projects=supabase-client,utils --skip-nx-cache"
+    "postinstall": ""
   },
   "dependencies": {
     "@emotion/cache": "^11.11.0",
@@ -40,13 +40,13 @@
     "react-dom": "19.2.0",
     "zod": "^3.22.0",
     "zustand": "^4.5.0",
-    "nx": "^20.1.0"
+    "nx": "^20.1.0",
+    "@nx/next": "^20.1.0",
+    "@nx/js": "^20.1.0",
+    "@nx/node": "^20.1.0",
+    "@nx/workspace": "^20.1.0"
   },
   "devDependencies": {
-    "@nx/js": "^20.1.0",
-    "@nx/next": "^20.1.0",
-    "@nx/node": "^20.1.0",
-    "@nx/workspace": "^20.1.0",
     "@swc-node/register": "^1.11.1",
     "@swc/core": "^1.15.3",
     "@tailwindcss/postcss": "^4",
