@@ -1,5 +1,4 @@
 {
-  "installCommand": "npm install",
-  "buildCommand": "turbo run build --filter=questions...",
+  "buildCommand": "cd ../.. && npm ci && cd apps/questions && npm install --no-save typescript @types/node @types/react @types/react-dom && cd ../.. && turbo run build --filter=questions",
   "outputDirectory": ".next"
 }
