@@ -40,14 +40,26 @@ export default function InterviewPage() {
   const isInterviewer = user ? (user.is_interviewer || user.is_admin) : false
 
   useEffect(() => {
-    fetchProblems()
+    // Only fetch in browser environment
+    if (typeof window !== 'undefined') {
+      fetchProblems()
+    }
   }, [])
 
   const fetchProblems = async () => {
     try {
       setLoading(true)
       setError(null)
+      // Get URL at runtime - ensure we're in browser
+      if (typeof window === 'undefined') {
+        throw new Error('Cannot fetch problems outside browser environment')
+      }
       const questionsAppUrl = getQuestionsAppUrl()
+      
+      // Log for debugging (remove in production if needed)
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Questions app URL:', questionsAppUrl)
+      }
       
       const response = await fetch(`${questionsAppUrl}/api/problems`, {
         method: 'GET',
@@ -73,11 +85,13 @@ export default function InterviewPage() {
       
       // More helpful error message if it's a network error
       if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
-        const isProduction = typeof window !== 'undefined' && !window.location.hostname.includes('localhost')
+        const questionsAppUrl = getQuestionsAppUrl()
+        const isProduction = typeof window !== 'undefined' && 
+                            window.location.hostname.includes('vercel.app')
         if (isProduction) {
-          setError('Unable to connect to questions app. Please check your environment configuration.')
+          setError(`Unable to connect to questions app at ${questionsAppUrl}. Please check your environment configuration.`)
         } else {
-          setError(`Unable to connect to questions app. Make sure it's running on ${process.env.NEXT_PUBLIC_QUESTIONS_APP_URL || 'http://localhost:3001'}`)
+          setError(`Unable to connect to questions app at ${questionsAppUrl}. Make sure it's running.`)
         }
       } else {
         setError(errorMessage)
