@@ -1,4 +1,4 @@
 {
-  "buildCommand": "cd ../.. && turbo run build --filter=questions",
+  "buildCommand": "cd ../.. && npm install && turbo run build --filter=questions",
   "outputDirectory": ".next"
 }
