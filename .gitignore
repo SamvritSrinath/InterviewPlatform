@@ -53,5 +53,5 @@ next-env.d.ts
 # sql
 /scripts/
 
-# turbo
-.turbo/
+# turbo (removed - no longer using monorepo)
+# .turbo/

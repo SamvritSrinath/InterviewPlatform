@@ -1,25 +1,44 @@
 # 291Y Interview Platform
 
-Modern LeetCode-style platform with cheating detection for interview environments, built as a Turborepo monorepo.
+Modern LeetCode-style platform with cheating detection for interview environments.
 
 ## 🏗️ Architecture
 
-This project uses a **Turborepo monorepo** structure with:
+This project is a **single Next.js application** that combines:
 
-- **apps/interview** - Main interview platform (Next.js)
-- **apps/questions** - Honeypot question site for AI detection (Next.js)
-- **packages/** - Shared code:
-  - `supabase-client` - Database types, Supabase clients, auth utilities
-  - `utils` - LLM detection, IP matching, validation schemas
-  - `ui` - Shared UI components (placeholder)
-  - `config` - Shared configuration (placeholder)
+- **Interview Platform** - Main interview platform with authentication, sessions, and monitoring
+- **Questions Archive** - Public problem repository at `/archive`
+- **Honeypot System** - Token-based honeypot detection at `/docs/v1/[token]/[problem_id]`
+
+### Project Structure
+
+```
+/
+├── app/                    # Next.js app directory
+│   ├── (auth)/            # Auth routes (login, signup)
+│   ├── admin/             # Admin routes
+│   ├── api/               # API routes
+│   ├── archive/           # Questions archive
+│   ├── dashboard/         # Dashboard
+│   ├── docs/              # Honeypot routes
+│   ├── interview/          # Interview routes
+│   ├── q/                 # Public question routes
+│   └── ...
+├── components/            # React components
+│   ├── interview/         # Interview-specific components
+│   └── questions/         # Questions-specific components
+├── lib/                   # Shared utilities
+│   ├── supabase/          # Supabase clients and auth
+│   └── utils/             # Utility functions
+└── scripts/               # Database migration scripts
+```
 
 ## 🚀 Quick Start
 
 ### Prerequisites
 
 - Node.js >= 18.0.0
-- npm or yarn
+- npm
 - Supabase account and project
 
 ### Installation
@@ -31,92 +50,59 @@ npm install
 ### Development
 
 ```bash
-# Start interview app (port 3000)
-npm run dev:interview
-
-# Start questions app (port 3001) - in another terminal
-npm run dev:questions
-
-# Or start both in parallel
-npm run dev:all
+npm run dev
 ```
+
+The app will start on `http://localhost:3000`
 
 ### Database Setup
 
-Run the migration script in Supabase SQL Editor:
+Run the migration scripts in Supabase SQL Editor:
 
 ```sql
--- See scripts/add-wrong-answer-fields.sql
+-- See scripts/ directory for migration files
 ```
 
 ### Environment Variables
 
-See `SETUP.md` for detailed environment variable configuration.
+Create a `.env.local` file with:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+NEXT_PUBLIC_APP_URL=http://localhost:3000
+```
 
 ## 📚 Documentation
 
 - **[SETUP.md](./SETUP.md)** - Complete setup guide
 - **[COMMANDS.md](./COMMANDS.md)** - Quick command reference
 - **[VERCEL_SETUP.md](./VERCEL_SETUP.md)** - Vercel deployment guide
-- **[MIGRATION_SUMMARY.md](./MIGRATION_SUMMARY.md)** - Migration details
-- **[CLEANUP_SUMMARY.md](./CLEANUP_SUMMARY.md)** - Repository cleanup summary
 
 ## 🛠️ Available Commands
 
 ### Development
 ```bash
-npm run dev:interview    # Start interview app
-npm run dev:questions    # Start questions app
-npm run dev:all         # Start both apps
+npm run dev      # Start development server
+npm run build   # Build for production
+npm run start   # Start production server
+npm run lint    # Run linter
+npm run clean   # Clean build artifacts
 ```
-
-### Building
-```bash
-npm run build:interview  # Build interview app
-npm run build:questions  # Build questions app
-npm run build:all       # Build all apps
-```
-
-### Linting
-```bash
-npm run lint:interview  # Lint interview app
-npm run lint:questions  # Lint questions app
-npm run lint:all        # Lint all apps
-```
-
-### Utilities
-```bash
-npm run clean          # Clean caches and node_modules
-```
-
-See [COMMANDS.md](./COMMANDS.md) for complete command reference.
 
 ## 🚢 Deployment
 
 ### Vercel (Recommended)
 
-This monorepo is configured for Vercel deployment. See [VERCEL_SETUP.md](./VERCEL_SETUP.md) for detailed instructions.
+This app is configured for single Vercel deployment.
 
 **Quick Setup:**
-1. Create two separate Vercel projects from the same repository
-2. Configure build commands:
-   - Interview: `turbo run build --filter=interview`
-   - Questions: `turbo run build --filter=questions`
-3. Set environment variables for each project
+1. Connect your repository to Vercel
+2. Set environment variables in Vercel dashboard
+3. Deploy
 
-### Key Vercel Settings
-
-**Interview App:**
-- Root Directory: `apps/interview`
-- Build Command: `cd ../.. && turbo run build --filter=interview`
-- Output Directory: `.next` (auto-detected by Next.js)
-- Install Command: `cd ../.. && npm install`
-
-**Questions App:**
-- Root Directory: `apps/questions`
-- Build Command: `cd ../.. && turbo run build --filter=questions`
-- Output Directory: `.next` (auto-detected by Next.js)
-- Install Command: `cd ../.. && npm install`
+The `vercel.json` file is already configured with the correct build settings.
 
 ## 🎯 Features
 
@@ -128,35 +114,18 @@ This monorepo is configured for Vercel deployment. See [VERCEL_SETUP.md](./VERCE
 
 ### AI Detection System
 - **LLM Traffic Detection** - Detects AI crawlers (OpenAI, Anthropic, Google, Perplexity)
-- **Honeypot Site** - Separate question site with wrong answers
+- **Honeypot System** - Token-based detection with wrong answers
 - **IP Matching** - Correlates access patterns with interview sessions
 - **Temporal Correlation** - Detects suspicious activity during active interviews
 
 ### Wrong Answer System
 - Problems can have intentionally wrong solutions
-- Wrong answers displayed on honeypot site
+- Wrong answers displayed on honeypot routes
 - Detects when candidates use LLMs that scrape the site
-
-## 📦 Project Structure
-
-```
-/
-├── apps/
-│   ├── interview/          # Main interview platform
-│   └── questions/          # Honeypot question site
-├── packages/
-│   ├── supabase-client/    # Shared Supabase utilities
-│   ├── utils/              # Shared utilities
-│   ├── ui/                 # Shared UI components
-│   └── config/             # Shared configuration
-├── scripts/                # Database migration scripts
-└── turbo.json              # Turborepo configuration
-```
 
 ## 🔧 Technology Stack
 
 - **Framework**: Next.js 16
-- **Monorepo**: Turborepo
 - **Database**: Supabase (PostgreSQL)
 - **Authentication**: Supabase Auth
 - **UI**: Material-UI, Tailwind CSS

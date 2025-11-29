@@ -3,29 +3,13 @@
   "version": "0.1.0",
   "description": "Modern LeetCode-style platform with cheating detection for interview environments",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
   "packageManager": "npm@10.0.0",
   "scripts": {
-    "dev": "turbo run dev",
-    "dev:interview": "turbo run dev --filter=interview",
-    "dev:questions": "turbo run dev --filter=questions",
-    "dev:all": "turbo run dev --parallel",
-    "build": "turbo run build",
-    "build:interview": "turbo run build --filter=interview",
-    "build:questions": "turbo run build --filter=questions",
-    "build:all": "turbo run build",
-    "start": "turbo run start --filter=interview",
-    "start:interview": "turbo run start --filter=interview",
-    "start:questions": "turbo run start --filter=questions",
-    "lint": "turbo run lint --filter=interview",
-    "lint:interview": "turbo run lint --filter=interview",
-    "lint:questions": "turbo run lint --filter=questions",
-    "lint:all": "turbo run lint",
-    "clean": "turbo run clean && rm -rf .turbo node_modules apps/*/node_modules packages/*/node_modules",
-    "postinstall": ""
+    "dev": "next dev",
+    "build": "next build --webpack",
+    "start": "next start",
+    "lint": "next lint",
+    "clean": "rm -rf .next node_modules"
   },
   "dependencies": {
     "@emotion/cache": "^11.11.0",
@@ -41,22 +25,23 @@
     "react-dom": "19.2.0",
     "zod": "^3.22.0",
     "zustand": "^4.5.0",
-    "turbo": "^2.0.0",
     "tailwindcss": "^4",
-    "@tailwindcss/postcss": "^4"
+    "@tailwindcss/postcss": "^4",
+    "marked": "^11.1.1",
+    "dompurify": "^3.0.8",
+    "lucide-react": "^0.460.0"
   },
   "devDependencies": {
-    "@swc-node/register": "^1.11.1",
-    "@swc/core": "^1.15.3",
-    "@tailwindcss/typography": "^0.5.19",
+    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/typography": "^0.5.10",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "baseline-browser-mapping": "^2.8.32",
+    "@types/marked": "^5.0.2",
+    "@types/dompurify": "^3.0.5",
     "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "16.0.1",
-    "tsx": "^4.20.6",
     "typescript": "^5.9.3"
   },
   "engines": {
