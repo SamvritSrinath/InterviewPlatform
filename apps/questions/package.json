@@ -1,0 +1,30 @@
+{
+  "name": "questions",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@interview-platform/supabase-client": "*",
+    "@interview-platform/utils": "*",
+    "@supabase/supabase-js": "^2.39.0",
+    "lucide-react": "^0.294.0",
+    "next": "14.2.16",
+    "react": "^18",
+    "react-dom": "^18",
+    "marked": "^11.1.1",
+    "dompurify": "^3.0.8"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@tailwindcss/typography": "^0.5.10",
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "@types/marked": "^5.0.2",
+    "@types/dompurify": "^3.0.5",
+    "eslint": "^8",
+    "eslint-config-next": "14.2.16",
+    "postcss": "^8",
+    "tailwindcss": "^4",
+    "typescript": "^5"
+  }
+}
