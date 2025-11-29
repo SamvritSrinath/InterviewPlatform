@@ -10,7 +10,8 @@ export async function middleware(request: NextRequest) {
 
   if (llmDetection.isLLM) {
     // Log LLM access to main app
-    const mainAppUrl = process.env.NEXT_PUBLIC_MAIN_APP_URL || 'http://localhost:3000';
+    const mainAppUrl = process.env.NEXT_PUBLIC_MAIN_APP_URL || 
+      (process.env.VERCEL_URL ? `https://interview-platform-ecru-gamma.vercel.app` : 'http://localhost:3000');
     const patternType = getLLMPatternType(llmDetection);
 
     // Fire and forget - don't block the request

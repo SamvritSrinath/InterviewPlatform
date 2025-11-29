@@ -22,6 +22,7 @@ import {
 } from '@mui/icons-material'
 import { useAuth } from '@/lib/supabase/auth-context'
 import Link from 'next/link'
+import { getQuestionsAppUrl } from '@/lib/utils/urls'
 
 export function UserMenu() {
   const { user, loading, signOut } = useAuth()
@@ -188,7 +189,7 @@ export function UserMenu() {
         <MenuItem
           onClick={() => {
             handleClose();
-            window.open(process.env.NEXT_PUBLIC_QUESTIONS_APP_URL || 'http://localhost:3001', '_blank');
+            window.open(getQuestionsAppUrl(), '_blank');
           }}
           sx={{ py: 1.5 }}
         >

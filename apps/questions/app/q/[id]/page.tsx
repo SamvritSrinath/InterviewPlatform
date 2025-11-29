@@ -5,6 +5,7 @@ import { useParams } from 'next/navigation';
 import Link from 'next/link';
 import { detectLLMTraffic, getLLMPatternType } from '@interview-platform/utils';
 import { ProblemRenderer } from '../../../components/problem-renderer';
+import { getQuestionsAppUrl } from '../../../lib/utils/urls';
 
 interface Problem {
   id: string;
@@ -158,7 +159,7 @@ export default function QuestionPage() {
             <h2 className="text-xl font-semibold text-gray-900 mb-3">Problem Description</h2>
             <ProblemRenderer
               description={problem.description}
-              honeypotUrl={`${process.env.NEXT_PUBLIC_QUESTIONS_APP_URL || 'http://localhost:3001'}/q/${problem.id}`}
+              honeypotUrl={`${getQuestionsAppUrl()}/q/${problem.id}`}
             />
           </div>
         )}

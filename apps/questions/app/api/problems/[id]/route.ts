@@ -5,16 +5,45 @@ import { createServiceClient } from '@interview-platform/supabase-client/src/ser
 export const revalidate = 300;
 
 function getCorsHeaders(origin: string | null) {
-  const allowedOrigins = [
-    process.env.NEXT_PUBLIC_MAIN_APP_URL || 'http://localhost:3000',
-    'http://localhost:3000',
-    'http://localhost:3001',
-  ];
+  // Build list of allowed origins
+  const allowedOrigins: string[] = [];
   
-  const allowOrigin = origin && allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+  // Add environment variable origin if set
+  if (process.env.NEXT_PUBLIC_MAIN_APP_URL) {
+    allowedOrigins.push(process.env.NEXT_PUBLIC_MAIN_APP_URL);
+  }
+  
+  // Add known production URLs
+  allowedOrigins.push('https://interview-platform-ecru-gamma.vercel.app');
+  
+  // Add localhost origins for development
+  allowedOrigins.push('http://localhost:3000', 'http://localhost:3001');
+  
+  // Check if origin matches any allowed origin or is a Vercel domain
+  let allowOrigin: string | null = null;
+  
+  if (origin) {
+    // Exact match
+    if (allowedOrigins.includes(origin)) {
+      allowOrigin = origin;
+    }
+    // Vercel domain pattern (allow any vercel.app subdomain)
+    else if (origin.match(/^https?:\/\/[\w-]+\.vercel\.app$/)) {
+      allowOrigin = origin;
+    }
+    // Allow requests from the same origin (same-origin requests)
+    else if (origin.includes('localhost') && allowedOrigins.some(o => o.includes('localhost'))) {
+      allowOrigin = origin;
+    }
+  }
+  
+  // Default to first allowed origin if no match
+  if (!allowOrigin && allowedOrigins.length > 0) {
+    allowOrigin = allowedOrigins[0];
+  }
   
   return {
-    'Access-Control-Allow-Origin': allowOrigin,
+    'Access-Control-Allow-Origin': allowOrigin || '*',
     'Access-Control-Allow-Methods': 'GET, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
   };

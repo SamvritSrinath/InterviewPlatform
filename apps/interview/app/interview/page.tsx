@@ -23,6 +23,7 @@ import {
 import { PlayArrow, ContentCopy } from '@mui/icons-material'
 import { Problem } from '@interview-platform/supabase-client'
 import { useAuth } from '@/lib/supabase/auth-context'
+import { getQuestionsAppUrl } from '@/lib/utils/urls'
 
 export default function InterviewPage() {
   const router = useRouter()
@@ -46,7 +47,7 @@ export default function InterviewPage() {
     try {
       setLoading(true)
       setError(null)
-      const questionsAppUrl = process.env.NEXT_PUBLIC_QUESTIONS_APP_URL || 'http://localhost:3001'
+      const questionsAppUrl = getQuestionsAppUrl()
       
       const response = await fetch(`${questionsAppUrl}/api/problems`, {
         method: 'GET',
@@ -72,7 +73,12 @@ export default function InterviewPage() {
       
       // More helpful error message if it's a network error
       if (errorMessage.includes('Failed to fetch') || errorMessage.includes('NetworkError')) {
-        setError(`Unable to connect to questions app. Make sure it's running on ${process.env.NEXT_PUBLIC_QUESTIONS_APP_URL || 'http://localhost:3001'}`)
+        const isProduction = typeof window !== 'undefined' && !window.location.hostname.includes('localhost')
+        if (isProduction) {
+          setError('Unable to connect to questions app. Please check your environment configuration.')
+        } else {
+          setError(`Unable to connect to questions app. Make sure it's running on ${process.env.NEXT_PUBLIC_QUESTIONS_APP_URL || 'http://localhost:3001'}`)
+        }
       } else {
         setError(errorMessage)
       }

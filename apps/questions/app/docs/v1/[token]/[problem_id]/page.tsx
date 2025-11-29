@@ -3,6 +3,7 @@ import { createServiceClient } from '@interview-platform/supabase-client/src/ser
 import { Database } from '@interview-platform/supabase-client';
 import Link from 'next/link';
 import { ProblemRenderer } from '../../../../../components/problem-renderer';
+import { getQuestionsAppUrl } from '../../../../../lib/utils/urls';
 
 type Problem = Database['public']['Tables']['problems']['Row'];
 type HoneypotAccessLogInsert = Database['public']['Tables']['honeypot_access_logs']['Insert'];
@@ -183,7 +184,7 @@ export default async function TokenizedHoneypotPage({ params }: PageProps) {
             <h2 className="text-xl font-semibold text-gray-900 mb-3">Problem Description</h2>
             <ProblemRenderer
               description={problem.description}
-              honeypotUrl={`${process.env.NEXT_PUBLIC_QUESTIONS_APP_URL || 'http://localhost:3001'}/docs/v1/${token}/${problem_id}`}
+              honeypotUrl={`${getQuestionsAppUrl()}/docs/v1/${token}/${problem_id}`}
             />
           </div>
         )}

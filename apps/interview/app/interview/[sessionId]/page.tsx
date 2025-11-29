@@ -28,6 +28,7 @@ import {InterviewDashboard} from '@/components/interview-dashboard';
 import {createClient} from '@/lib/supabase/client';
 import {CheckCircle} from '@mui/icons-material';
 import { marked } from 'marked';
+import {getQuestionsAppUrl} from '@/lib/utils/urls';
 import {createHiddenInstructions} from '@/lib/utils/unicode-smuggling';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
@@ -113,7 +114,7 @@ export default function InterviewSessionPage() {
       if (text.length < 50) return; // Don't inject on small copies
 
       // Construct the honeypot URL
-      const questionsAppUrl = process.env.NEXT_PUBLIC_QUESTIONS_APP_URL || 'http://localhost:3001';
+      const questionsAppUrl = getQuestionsAppUrl();
       const honeypotUrl = `${questionsAppUrl}/docs/v1/${session.honeypot_token}/${problem.id}`;
       
       // Visible context injection (existing behavior)
@@ -195,7 +196,7 @@ export default function InterviewSessionPage() {
       ) {
         // Always fetch problem when interviewer becomes ready
         if (updatedSession.problem_id) {
-          const questionsAppUrl = process.env.NEXT_PUBLIC_QUESTIONS_APP_URL || 'http://localhost:3001'
+          const questionsAppUrl = getQuestionsAppUrl()
           fetch(`${questionsAppUrl}/api/problems/${updatedSession.problem_id}`)
             .then(res => res.json())
             .then(data => {
@@ -513,7 +514,7 @@ export default function InterviewSessionPage() {
           // Only initialize code if not interviewer (though useEffect handles this too)
           // Logic in useEffect is safer
         } else if (sessionData.problem_id) {
-          const questionsAppUrl = process.env.NEXT_PUBLIC_QUESTIONS_APP_URL || 'http://localhost:3001'
+          const questionsAppUrl = getQuestionsAppUrl()
           const problemResponse = await fetch(
             `${questionsAppUrl}/api/problems/${sessionData.problem_id}`,
           );
