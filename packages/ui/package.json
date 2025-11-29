@@ -5,7 +5,7 @@
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "npx tsc",
     "lint": "eslint src --ext .ts,.tsx",
     "clean": "rm -rf dist"
   },

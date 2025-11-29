@@ -1,4 +1,4 @@
 {
-  "buildCommand": "cd ../.. && rm -rf node_modules package-lock.json && npm install && turbo run build --filter=interview",
+  "buildCommand": "cd ../.. && npm ci && npm install --workspaces --include-workspace-root && turbo run build --filter=interview",
   "outputDirectory": ".next"
 }
