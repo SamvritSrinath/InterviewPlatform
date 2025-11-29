@@ -10,7 +10,7 @@
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
-        "outputPath": "dist/apps/questions"
+        "outputPath": "dist/apps/questions/.next"
       }
     },
     "serve": {

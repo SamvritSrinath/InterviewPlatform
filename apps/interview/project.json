@@ -10,7 +10,7 @@
       "outputs": ["{options.outputPath}"],
       "defaultConfiguration": "production",
       "options": {
-        "outputPath": "dist/apps/interview"
+        "outputPath": "dist/apps/interview/.next"
       }
     },
     "serve": {

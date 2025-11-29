@@ -3,5 +3,5 @@
   "devCommand": "npx nx dev interview",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "outputDirectory": "apps/interview/.next"
+  "outputDirectory": "dist/apps/interview/"
 }
