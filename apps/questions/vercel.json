@@ -1,6 +1,6 @@
 {
-  "buildCommand": "nx build questions",
-  "devCommand": "nx dev questions",
+  "buildCommand": "npx nx build questions",
+  "devCommand": "npx nx dev questions",
   "installCommand": "npm install",
   "framework": "nextjs",
   "outputDirectory": "dist/apps/questions/.next"

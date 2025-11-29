@@ -1,6 +1,6 @@
 {
-  "buildCommand": "nx build interview",
-  "devCommand": "nx dev interview",
+  "buildCommand": "npx nx build interview",
+  "devCommand": "npx nx dev interview",
   "installCommand": "npm install",
   "framework": "nextjs",
   "outputDirectory": "dist/apps/interview/.next"
