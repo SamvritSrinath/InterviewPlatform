@@ -9,11 +9,11 @@
   ],
   "packageManager": "npm@10.0.0",
   "scripts": {
-    "dev": "turbo run dev --filter=interview",
+    "dev": "turbo run dev",
     "dev:interview": "turbo run dev --filter=interview",
     "dev:questions": "turbo run dev --filter=questions",
     "dev:all": "turbo run dev --parallel",
-    "build": "turbo run build --filter=interview",
+    "build": "turbo run build",
     "build:interview": "turbo run build --filter=interview",
     "build:questions": "turbo run build --filter=questions",
     "build:all": "turbo run build",
