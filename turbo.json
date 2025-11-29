@@ -7,12 +7,14 @@
       "env": [
         "NEXT_PUBLIC_SUPABASE_URL",
         "NEXT_PUBLIC_SUPABASE_ANON_KEY",
-        "NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY"
+        "SUPABASE_SERVICE_ROLE_KEY",
+        "NODE_ENV"
       ],
       "inputs": [
         "env.NEXT_PUBLIC_SUPABASE_URL",
         "env.NEXT_PUBLIC_SUPABASE_ANON_KEY",
-        "env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY"
+        "env.SUPABASE_SERVICE_ROLE_KEY",
+        "env.NODE_ENV"
       ]
     },
     "dev": {
