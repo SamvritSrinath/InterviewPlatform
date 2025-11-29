@@ -1,5 +1,4 @@
 {
-  "installCommand": "npm install",
-  "buildCommand": "turbo run build --filter=interview",
+  "buildCommand": "cd ../.. && npm install && cd apps/interview && npm install typescript @types/node @types/react @types/react-dom --legacy-peer-deps && cd ../.. && turbo run build --filter=interview",
   "outputDirectory": ".next"
 }
