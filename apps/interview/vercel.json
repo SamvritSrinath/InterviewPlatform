@@ -1,4 +1,4 @@
 {
-  "buildCommand": "cd ../.. && npm ci && turbo run build --filter=interview",
+  "buildCommand": "cd ../.. && npm ci && cd apps/interview && mkdir -p node_modules/.bin && ln -sf ../../../node_modules/.bin/tsc node_modules/.bin/tsc && cd ../.. && turbo run build --filter=interview",
   "outputDirectory": ".next"
 }
