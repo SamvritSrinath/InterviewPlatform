@@ -3,10 +3,16 @@
   "version": "0.1.0",
   "description": "Modern LeetCode-style platform with cheating detection for interview environments",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*"
-  ],
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*"
+    ],
+    "nohoist": [
+      "**/typescript",
+      "**/typescript/**"
+    ]
+  },
   "packageManager": "npm@10.0.0",
   "scripts": {
     "dev": "turbo run dev",
