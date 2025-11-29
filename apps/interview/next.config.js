@@ -1,6 +1,5 @@
-import type { NextConfig } from "next";
-
-const nextConfig: NextConfig = {
+/** @type {import('next').NextConfig} */
+const nextConfig = {
   reactStrictMode: true,
   compress: true,
   poweredByHeader: false,
@@ -12,7 +11,10 @@ const nextConfig: NextConfig = {
   experimental: {
     optimizePackageImports: ['@mui/material', '@mui/icons-material'],
   },
-  transpilePackages: ['@interview-platform/supabase-client', '@interview-platform/utils'],
+  transpilePackages: [
+    '@interview-platform/supabase-client',
+    '@interview-platform/utils',
+  ],
 };
 
 export default nextConfig;
