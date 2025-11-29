@@ -2,6 +2,13 @@
   "name": "questions",
   "version": "0.1.0",
   "private": true,
+  "scripts": {
+    "dev": "next dev -p 3001",
+    "build": "next build",
+    "start": "next start -p 3001",
+    "lint": "next lint",
+    "clean": "rm -rf .next dist"
+  },
   "dependencies": {
     "@interview-platform/supabase-client": "*",
     "@interview-platform/utils": "*",

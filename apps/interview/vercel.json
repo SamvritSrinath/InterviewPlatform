@@ -1,7 +1,4 @@
 {
-  "buildCommand": "npx nx build interview",
-  "devCommand": "npx nx dev interview",
-  "installCommand": "npm install",
-  "framework": "nextjs",
-  "outputDirectory": "dist/apps/interview/"
+  "buildCommand": "cd ../.. && turbo run build --filter=interview",
+  "installCommand": "cd ../.. && npm install"
 }

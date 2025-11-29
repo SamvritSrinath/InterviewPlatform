@@ -1,10 +1,10 @@
 # 291Y Interview Platform
 
-Modern LeetCode-style platform with cheating detection for interview environments, built as an NX monorepo.
+Modern LeetCode-style platform with cheating detection for interview environments, built as a Turborepo monorepo.
 
 ## 🏗️ Architecture
 
-This project uses an **NX monorepo** structure with:
+This project uses a **Turborepo monorepo** structure with:
 
 - **apps/interview** - Main interview platform (Next.js)
 - **apps/questions** - Honeypot question site for AI detection (Next.js)
@@ -86,7 +86,6 @@ npm run lint:all        # Lint all apps
 
 ### Utilities
 ```bash
-nx graph               # View dependency graph
 npm run clean          # Clean caches and node_modules
 ```
 
@@ -101,19 +100,23 @@ This monorepo is configured for Vercel deployment. See [VERCEL_SETUP.md](./VERCE
 **Quick Setup:**
 1. Create two separate Vercel projects from the same repository
 2. Configure build commands:
-   - Interview: `nx build interview`
-   - Questions: `nx build questions`
+   - Interview: `turbo run build --filter=interview`
+   - Questions: `turbo run build --filter=questions`
 3. Set environment variables for each project
 
 ### Key Vercel Settings
 
 **Interview App:**
-- Build Command: `nx build interview`
-- Output Directory: `dist/apps/interview/.next`
+- Root Directory: `apps/interview`
+- Build Command: `cd ../.. && turbo run build --filter=interview`
+- Output Directory: `.next` (auto-detected by Next.js)
+- Install Command: `cd ../.. && npm install`
 
 **Questions App:**
-- Build Command: `nx build questions`
-- Output Directory: `dist/apps/questions/.next`
+- Root Directory: `apps/questions`
+- Build Command: `cd ../.. && turbo run build --filter=questions`
+- Output Directory: `.next` (auto-detected by Next.js)
+- Install Command: `cd ../.. && npm install`
 
 ## 🎯 Features
 
@@ -147,13 +150,13 @@ This monorepo is configured for Vercel deployment. See [VERCEL_SETUP.md](./VERCE
 │   ├── ui/                 # Shared UI components
 │   └── config/             # Shared configuration
 ├── scripts/                # Database migration scripts
-└── nx.json                 # NX workspace configuration
+└── turbo.json              # Turborepo configuration
 ```
 
 ## 🔧 Technology Stack
 
 - **Framework**: Next.js 16
-- **Monorepo**: NX
+- **Monorepo**: Turborepo
 - **Database**: Supabase (PostgreSQL)
 - **Authentication**: Supabase Auth
 - **UI**: Material-UI, Tailwind CSS
