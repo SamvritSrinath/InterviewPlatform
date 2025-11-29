@@ -9,7 +9,7 @@ import {
   useCallback,
 } from 'react';
 import {createBrowserClient as createClient} from '@interview-platform/supabase-client';
-import {User} from '@supabase/supabase-js';
+import {User, AuthChangeEvent, Session as SupabaseSession} from '@supabase/supabase-js';
 
 interface AuthUser {
   id: string;
@@ -117,7 +117,7 @@ export function AuthProvider({children}: {children: ReactNode}) {
     // Listen for auth state changes
     const {
       data: {subscription},
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: SupabaseSession | null) => {
       if (event === 'SIGNED_IN') {
         // User explicitly signed in - fetch fresh profile
         if (session?.user && mounted) {

@@ -1,21 +1,11 @@
 import { headers } from 'next/headers';
-import { createClient } from '@supabase/supabase-js';
+import { createServiceClient } from '@interview-platform/supabase-client/src/server';
 import { Database } from '@interview-platform/supabase-client';
 import Link from 'next/link';
 import { ProblemRenderer } from '../../../../../components/problem-renderer';
 
-function createServiceClient() {
-  return createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    },
-  );
-}
+type Problem = Database['public']['Tables']['problems']['Row'];
+type HoneypotAccessLogInsert = Database['public']['Tables']['honeypot_access_logs']['Insert'];
 
 function extractIPFromHeaders(headersList: Headers): string {
   return (
@@ -68,12 +58,15 @@ export default async function TokenizedHoneypotPage({ params }: PageProps) {
   const detectedIp = extractIPFromHeaders(headersList);
 
   try {
-    await serviceClient.from('honeypot_access_logs').insert({
+    const logData: HoneypotAccessLogInsert = {
       token_used: token,
       detected_ip: detectedIp,
       user_agent: userAgent,
       severity: 'HIGH',
-    });
+    };
+    // TypeScript inference issue with Supabase insert - using type assertion as workaround
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    await (serviceClient.from('honeypot_access_logs') as any).insert([logData]);
     // Database trigger will automatically create cheating_attempts record
   } catch (error) {
     // Silent failure - don't reveal honeypot nature
@@ -81,11 +74,13 @@ export default async function TokenizedHoneypotPage({ params }: PageProps) {
   }
 
   // Fetch the problem with wrong_answer (poisoned data)
-  const { data: problem, error: problemError } = await serviceClient
+  const { data: problemData, error: problemError } = await serviceClient
     .from('problems')
     .select('*')
     .eq('id', problem_id)
     .single();
+  
+  const problem = problemData as Problem | null;
 
   if (problemError || !problem) {
     return (

@@ -1,22 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { Database } from '@interview-platform/supabase-client';
+import { createServiceClient } from '@interview-platform/supabase-client/src/server';
 
 // Cache individual problems for 5 minutes
 export const revalidate = 300;
-
-function createServiceClient() {
-  return createClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    },
-  );
-}
 
 function getCorsHeaders(origin: string | null) {
   const allowedOrigins = [

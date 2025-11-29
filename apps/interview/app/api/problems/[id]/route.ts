@@ -3,6 +3,7 @@ import {createServiceClient} from '@/lib/supabase/server';
 import {requireInterviewer} from '@/lib/supabase/auth';
 import {Database} from '@interview-platform/supabase-client';
 import {updateProblemSchema} from '@interview-platform/utils';
+import {z, ZodError} from 'zod';
 
 // Cache individual problems for 300 seconds (5 minutes)
 export const revalidate = 300;
@@ -123,7 +124,7 @@ export async function PUT(
     return NextResponse.json({problem});
   } catch (error: unknown) {
     console.error('Error in PUT /api/problems/[id]:', error);
-    if (error instanceof z.ZodError) {
+    if (error instanceof ZodError) {
       return NextResponse.json(
         {error: 'Invalid request data', details: error.errors},
         {status: 400},

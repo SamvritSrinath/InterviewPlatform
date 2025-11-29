@@ -1,4 +1,4 @@
-import {Problem, Session, CheatingAttempt, ScraperLog} from './database';
+import {Problem, Session, CheatingAttempt} from './database';
 
 // API Response types
 export interface ApiResponse<T> {
@@ -25,10 +25,6 @@ export interface SessionResponse {
 
 export interface CheatingAttemptsResponse {
   attempts: CheatingAttempt[];
-}
-
-export interface ScraperLogsResponse {
-  logs: ScraperLog[];
 }
 
 // API Request types

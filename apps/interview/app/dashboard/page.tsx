@@ -22,6 +22,8 @@ import {
 } from '@mui/material'
 import { ExpandMore, Warning } from '@mui/icons-material'
 import { createClient } from '@/lib/supabase/client'
+import { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
+import { Database } from '@interview-platform/supabase-client'
 
 export default function DashboardPage() {
   // Use a map to group data: { [intervieweeId]: { user: User, sessions: Session[], attempts: Attempt[] } }
@@ -47,11 +49,13 @@ export default function DashboardPage() {
           schema: 'public',
           table: 'cheating_attempts',
         },
-        (payload) => {
-          setNotification({
-            message: `New cheating attempt detected: ${payload.new.attempt_type}`,
-            severity: 'warning',
-          })
+        (payload: RealtimePostgresChangesPayload<Database['public']['Tables']['cheating_attempts']['Row']>) => {
+          if (payload.new && 'attempt_type' in payload.new) {
+            setNotification({
+              message: `New cheating attempt detected: ${payload.new.attempt_type}`,
+              severity: 'warning',
+            })
+          }
           fetchData() // Refresh all data
         }
       )
@@ -225,7 +229,7 @@ export default function DashboardPage() {
                               />
                             </TableCell>
                             <TableCell>{new Date(session.start_time).toLocaleString()}</TableCell>
-                            <TableCell>{session.client_ip || 'N/A'}</TableCell>
+                            <TableCell>{(session as any).client_ip || 'N/A'}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>

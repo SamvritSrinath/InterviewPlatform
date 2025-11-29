@@ -296,8 +296,8 @@ export default function InterviewSessionPage() {
           });
         },
       )
-      .subscribe((status: string, err: Error) => {
-        if (status === 'CHANNEL_ERROR') {
+      .subscribe((status: string, err?: Error) => {
+        if (status === 'CHANNEL_ERROR' && err) {
           console.error('❌ Error subscribing to session updates:', err);
         }
       });

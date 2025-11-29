@@ -18,8 +18,13 @@
         "name": "next"
       }
     ],
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@interview-platform/ui": ["../../packages/ui/src/index.ts"],
+      "@interview-platform/utils": ["../../packages/utils/src/index.ts"],
+      "@interview-platform/config": ["../../packages/config/src/index.ts"],
+      "@interview-platform/supabase-client": ["../../packages/supabase-client/src/index.ts"]
     }
   },
   "include": [

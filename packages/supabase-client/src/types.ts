@@ -40,6 +40,7 @@ export interface Database {
           wrong_answer_explanation: string | null
           created_at: string
           updated_at: string
+          is_honeypot: boolean
         }
         Insert: {
           id?: string
@@ -53,6 +54,7 @@ export interface Database {
           wrong_answer_explanation?: string | null
           created_at?: string
           updated_at?: string
+          is_honeypot?: boolean
         }
         Update: {
           id?: string
@@ -66,6 +68,7 @@ export interface Database {
           wrong_answer_explanation?: string | null
           created_at?: string
           updated_at?: string
+          is_honeypot?: boolean
         }
       }
       sessions: {
@@ -86,6 +89,7 @@ export interface Database {
           interviewee_started: boolean
           approved: boolean
           candidate_name: string | null
+          client_ip: string | null
         }
         Insert: {
           id?: string
@@ -104,6 +108,7 @@ export interface Database {
           interviewee_started?: boolean
           approved?: boolean
           candidate_name?: string | null
+          client_ip?: string | null
         }
         Update: {
           id?: string
@@ -122,6 +127,7 @@ export interface Database {
           interviewee_started?: boolean
           approved?: boolean
           candidate_name?: string | null
+          client_ip?: string | null
         }
       }
       solutions: {

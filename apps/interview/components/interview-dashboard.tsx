@@ -22,7 +22,8 @@ import {
 } from '@mui/material'
 import { Warning, Assessment, Psychology, AccessTime, Security } from '@mui/icons-material'
 import { createClient } from '@/lib/supabase/client'
-import { Session, Problem } from '@interview-platform/supabase-client'
+import { Session, Problem, Database } from '@interview-platform/supabase-client'
+import { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 
 interface InterviewDashboardProps {
   session: Session
@@ -60,19 +61,21 @@ export function InterviewDashboard({
           table: 'cheating_attempts',
           filter: `session_id=eq.${session.id}`,
         },
-        (payload) => {
-          const attempt = payload.new as any
-          // Add to cheating attempts list
-          setCheatingAttempts((prev) => [attempt, ...prev])
-          
-          // If it's an LLM attempt or honeypot access, also add to LLM attempts
-          // Honeypot visits indicate LLM usage (they accessed the honeypot URL)
-          if (attempt.attempt_type === 'llm-api-request' || attempt.attempt_type === 'honeypot-access') {
-            setLlmAttempts((prev) => [attempt, ...prev])
+        (payload: RealtimePostgresChangesPayload<Database['public']['Tables']['cheating_attempts']['Row']>) => {
+          if (payload.new && 'attempt_type' in payload.new) {
+            const attempt = payload.new as Database['public']['Tables']['cheating_attempts']['Row']
+            // Add to cheating attempts list
+            setCheatingAttempts((prev) => [attempt, ...prev])
+            
+            // If it's an LLM attempt or honeypot access, also add to LLM attempts
+            // Honeypot visits indicate LLM usage (they accessed the honeypot URL)
+            if (attempt.attempt_type === 'llm-api-request' || attempt.attempt_type === 'honeypot-access') {
+              setLlmAttempts((prev) => [attempt, ...prev])
+            }
+            
+            // Real-time alert: All cheating attempts trigger alerts via this subscription
+            // No need to store alerts separately - they're broadcast via real-time
           }
-          
-          // Real-time alert: All cheating attempts trigger alerts via this subscription
-          // No need to store alerts separately - they're broadcast via real-time
         }
       )
       .subscribe()
@@ -88,7 +91,7 @@ export function InterviewDashboard({
           table: 'sessions',
           filter: `id=eq.${session.id}`,
         },
-        (payload) => {
+        (_payload: RealtimePostgresChangesPayload<Database['public']['Tables']['sessions']['Row']>) => {
           // Session updated - timer will recalculate on next render
           // This ensures timer stays synced between interviewer and interviewee
         }
@@ -279,7 +282,7 @@ export function InterviewDashboard({
                       secondary={
                         <Box sx={{ mt: 1 }}>
                           <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
-                            IP Address: {attempt.client_ip || 'Unknown'}
+                            IP Address: {(attempt as any).client_ip || (attempt as any).sessions?.client_ip || (attempt.details as any)?.client_ip || 'Unknown'}
                           </Typography>
                           <Typography variant="body2" color="text.secondary">
                             Detected at: {new Date(attempt.detected_at).toLocaleString()}
@@ -351,7 +354,7 @@ export function InterviewDashboard({
                       }
                       secondary={
                         <Typography variant="body2" color="text.secondary">
-                          IP: {attempt.client_ip || 'Unknown'} | 
+                          IP: {(attempt as any).client_ip || (attempt as any).sessions?.client_ip || (attempt.details as any)?.client_ip || 'Unknown'} | 
                           {attempt.details 
                             ? ` Details: ${JSON.stringify(attempt.details).substring(0, 100)}...`
                             : ' No additional details'}
