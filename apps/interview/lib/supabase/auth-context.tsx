@@ -7,6 +7,7 @@ import {
   useState,
   ReactNode,
   useCallback,
+  useMemo,
 } from 'react';
 import {createBrowserClient as createClient} from '@interview-platform/supabase-client';
 import {User, AuthChangeEvent, Session as SupabaseSession} from '@supabase/supabase-js';
@@ -31,7 +32,27 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({children}: {children: ReactNode}) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
-  const supabase = createClient();
+  
+  // Only create client if env vars are available and we're in the browser (skip during build/prerender)
+  const supabase = useMemo(() => {
+    // Skip during SSR/build - only create in browser
+    if (typeof window === 'undefined') {
+      return null;
+    }
+    
+    // Check if env vars are available
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      return null;
+    }
+    
+    try {
+      return createClient();
+    } catch (error) {
+      // During build/prerender, env vars might not be available - that's okay
+      console.warn('Supabase client creation failed:', error);
+      return null;
+    }
+  }, []);
 
   const fetchUserProfile = useCallback(
     async (authUser: User | null): Promise<AuthUser | null> => {
@@ -66,6 +87,11 @@ export function AuthProvider({children}: {children: ReactNode}) {
   );
 
   const refreshUser = useCallback(async () => {
+    if (!supabase) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
     try {
       const {
         data: {user: authUser},
@@ -83,6 +109,14 @@ export function AuthProvider({children}: {children: ReactNode}) {
 
     // Initial load - check session and fetch profile ONCE if session exists
     const loadUser = async () => {
+      if (!supabase) {
+        if (mounted) {
+          setLoading(false);
+          setUser(null);
+        }
+        return;
+      }
+
       try {
         const {
           data: {session},
@@ -114,7 +148,13 @@ export function AuthProvider({children}: {children: ReactNode}) {
 
     loadUser();
 
-    // Listen for auth state changes
+    // Listen for auth state changes (only if supabase client is available)
+    if (!supabase) {
+      return () => {
+        mounted = false;
+      };
+    }
+
     const {
       data: {subscription},
     } = supabase.auth.onAuthStateChange(async (event: AuthChangeEvent, session: SupabaseSession | null) => {
@@ -144,7 +184,9 @@ export function AuthProvider({children}: {children: ReactNode}) {
   }, [supabase, fetchUserProfile]);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
     setUser(null);
   };
 

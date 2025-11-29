@@ -4,11 +4,21 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**", ".next/**", "!.next/cache/**"],
-      "env": ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_ANON_KEY"]
+      "env": [
+        "NEXT_PUBLIC_SUPABASE_URL",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY"
+      ],
+      "inputs": [
+        "env.NEXT_PUBLIC_SUPABASE_URL",
+        "env.NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "env.NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY"
+      ]
     },
     "dev": {
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      "inputs": ["env.local"]
     },
     "lint": {
       "dependsOn": ["^build"],
@@ -28,4 +38,3 @@
     }
   }
 }
-

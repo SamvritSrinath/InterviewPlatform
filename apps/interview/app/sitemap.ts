@@ -1,5 +1,4 @@
 import {MetadataRoute} from 'next';
-import {createServiceClient} from '@/lib/supabase/server';
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl =
