@@ -1,3 +1,5 @@
 {
-  "buildCommand": "cd ../.. && turbo run build --filter=interview"
+  "buildCommand": "cd ../.. && turbo run build --filter=interview",
+  "installCommand": "cd ../.. && npm install",
+  "outputDirectory": ".next"
 }
