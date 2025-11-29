@@ -46,7 +46,7 @@
     "@nx/node": "^20.1.0",
     "@nx/workspace": "^20.1.0",
     "tailwindcss": "^4",
-    "tailwindcss/postcss": "^4"
+    "@tailwindcss/postcss": "^4"
   },
   "devDependencies": {
     "@swc-node/register": "^1.11.1",
