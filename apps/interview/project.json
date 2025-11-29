@@ -1,0 +1,72 @@
+{
+  "name": "interview",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "apps/interview",
+  "projectType": "application",
+  "tags": ["type:app", "scope:interview"],
+  "targets": {
+    "build": {
+      "executor": "@nx/next:build",
+      "outputs": ["{options.outputPath}"],
+      "defaultConfiguration": "production",
+      "options": {
+        "outputPath": "dist/apps/interview"
+      }
+    },
+    "serve": {
+      "executor": "@nx/next:server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "interview:build",
+        "dev": true
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "interview:build:development",
+          "dev": true
+        },
+        "production": {
+          "buildTarget": "interview:build:production",
+          "dev": false
+        }
+      }
+    },
+    "dev": {
+      "executor": "@nx/next:server",
+      "defaultConfiguration": "development",
+      "options": {
+        "buildTarget": "interview:build",
+        "dev": true,
+        "port": 3000
+      },
+      "configurations": {
+        "development": {
+          "buildTarget": "interview:build:development",
+          "dev": true
+        },
+        "production": {
+          "buildTarget": "interview:build:production",
+          "dev": false
+        }
+      }
+    },
+    "start": {
+      "executor": "@nx/next:server",
+      "defaultConfiguration": "production",
+      "options": {
+        "buildTarget": "interview:build",
+        "dev": false
+      }
+    },
+    "lint": {
+      "executor": "@nx/eslint:lint",
+      "outputs": ["{options.outputFile}"]
+    },
+    "export": {
+      "executor": "@nx/next:export",
+      "options": {
+        "buildTarget": "interview:build:production"
+      }
+    }
+  }
+}

@@ -1,36 +1,169 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 291Y Interview Platform
 
-## Getting Started
+Modern LeetCode-style platform with cheating detection for interview environments, built as an NX monorepo.
 
-First, run the development server:
+## 🏗️ Architecture
+
+This project uses an **NX monorepo** structure with:
+
+- **apps/interview** - Main interview platform (Next.js)
+- **apps/questions** - Honeypot question site for AI detection (Next.js)
+- **packages/** - Shared code:
+  - `supabase-client` - Database types, Supabase clients, auth utilities
+  - `utils` - LLM detection, IP matching, validation schemas
+  - `ui` - Shared UI components (placeholder)
+  - `config` - Shared configuration (placeholder)
+
+## 🚀 Quick Start
+
+### Prerequisites
+
+- Node.js >= 18.0.0
+- npm or yarn
+- Supabase account and project
+
+### Installation
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Development
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+# Start interview app (port 3000)
+npm run dev:interview
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+# Start questions app (port 3001) - in another terminal
+npm run dev:questions
 
-## Learn More
+# Or start both in parallel
+npm run dev:all
+```
 
-To learn more about Next.js, take a look at the following resources:
+### Database Setup
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Run the migration script in Supabase SQL Editor:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```sql
+-- See scripts/add-wrong-answer-fields.sql
+```
 
-## Deploy on Vercel
+### Environment Variables
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+See `SETUP.md` for detailed environment variable configuration.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## 📚 Documentation
+
+- **[SETUP.md](./SETUP.md)** - Complete setup guide
+- **[COMMANDS.md](./COMMANDS.md)** - Quick command reference
+- **[VERCEL_SETUP.md](./VERCEL_SETUP.md)** - Vercel deployment guide
+- **[MIGRATION_SUMMARY.md](./MIGRATION_SUMMARY.md)** - Migration details
+- **[CLEANUP_SUMMARY.md](./CLEANUP_SUMMARY.md)** - Repository cleanup summary
+
+## 🛠️ Available Commands
+
+### Development
+```bash
+npm run dev:interview    # Start interview app
+npm run dev:questions    # Start questions app
+npm run dev:all         # Start both apps
+```
+
+### Building
+```bash
+npm run build:interview  # Build interview app
+npm run build:questions  # Build questions app
+npm run build:all       # Build all apps
+```
+
+### Linting
+```bash
+npm run lint:interview  # Lint interview app
+npm run lint:questions  # Lint questions app
+npm run lint:all        # Lint all apps
+```
+
+### Utilities
+```bash
+nx graph               # View dependency graph
+npm run clean          # Clean caches and node_modules
+```
+
+See [COMMANDS.md](./COMMANDS.md) for complete command reference.
+
+## 🚢 Deployment
+
+### Vercel (Recommended)
+
+This monorepo is configured for Vercel deployment. See [VERCEL_SETUP.md](./VERCEL_SETUP.md) for detailed instructions.
+
+**Quick Setup:**
+1. Create two separate Vercel projects from the same repository
+2. Configure build commands:
+   - Interview: `nx build interview`
+   - Questions: `nx build questions`
+3. Set environment variables for each project
+
+### Key Vercel Settings
+
+**Interview App:**
+- Build Command: `nx build interview`
+- Output Directory: `dist/apps/interview/.next`
+
+**Questions App:**
+- Build Command: `nx build questions`
+- Output Directory: `dist/apps/questions/.next`
+
+## 🎯 Features
+
+### Interview Platform
+- Real-time coding interviews with Monaco editor
+- Cheating detection (tab switching, copy-paste, LLM API calls)
+- Session management and analytics
+- Problem repository with solutions
+
+### AI Detection System
+- **LLM Traffic Detection** - Detects AI crawlers (OpenAI, Anthropic, Google, Perplexity)
+- **Honeypot Site** - Separate question site with wrong answers
+- **IP Matching** - Correlates access patterns with interview sessions
+- **Temporal Correlation** - Detects suspicious activity during active interviews
+
+### Wrong Answer System
+- Problems can have intentionally wrong solutions
+- Wrong answers displayed on honeypot site
+- Detects when candidates use LLMs that scrape the site
+
+## 📦 Project Structure
+
+```
+/
+├── apps/
+│   ├── interview/          # Main interview platform
+│   └── questions/          # Honeypot question site
+├── packages/
+│   ├── supabase-client/    # Shared Supabase utilities
+│   ├── utils/              # Shared utilities
+│   ├── ui/                 # Shared UI components
+│   └── config/             # Shared configuration
+├── scripts/                # Database migration scripts
+└── nx.json                 # NX workspace configuration
+```
+
+## 🔧 Technology Stack
+
+- **Framework**: Next.js 16
+- **Monorepo**: NX
+- **Database**: Supabase (PostgreSQL)
+- **Authentication**: Supabase Auth
+- **UI**: Material-UI, Tailwind CSS
+- **Code Editor**: Monaco Editor
+- **Language**: TypeScript
+
+## 📝 License
+
+Private project for CSE 291Y.
+
+## 🤝 Contributing
+
+This is a private academic project. For questions or issues, contact the project maintainers.

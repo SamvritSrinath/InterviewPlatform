@@ -1,0 +1,14 @@
+node_modules
+dist
+.next
+.vercel
+coverage
+*.log
+.env
+.env.local
+.env.*.local
+.DS_Store
+*.swp
+*.swo
+*~
+
