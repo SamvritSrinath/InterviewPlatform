@@ -3,6 +3,5 @@
   "devCommand": "npx nx dev questions",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "outputDirectory": "dist/apps/questions/.next"
+  "outputDirectory": "apps/questions/.next"
 }
-
