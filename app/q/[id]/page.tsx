@@ -3,6 +3,20 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
+import {
+  Container,
+  Typography,
+  Box,
+  Paper,
+  Chip,
+  Button,
+  CircularProgress,
+  Grid,
+  Divider,
+} from '@mui/material';
+import { ArrowBack } from '@mui/icons-material';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { detectLLMTraffic, getLLMPatternType } from '@/lib/utils';
 import { ProblemRenderer } from '@/components/questions/problem-renderer';
 
@@ -46,44 +60,58 @@ export default function QuestionPage() {
   // Note: Old honeypot logging removed - token-based system is now primary
   // The /docs/v1/[token]/[problem_id] route handles honeypot detection
 
-  const getDifficultyColor = (difficulty: string) => {
-    switch (difficulty?.toLowerCase()) {
-      case 'easy':
-        return 'bg-green-100 text-green-800 border-green-200';
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'hard':
-        return 'bg-red-100 text-red-800 border-red-200';
-      default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
-    }
+  const getDifficultyColor = (difficulty: string): 'success' | 'warning' | 'error' | 'default' => {
+    // Use neutral colors for all difficulties
+    return 'default';
   };
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mb-4"></div>
-          <p className="text-gray-500">Loading solution...</p>
-        </div>
-      </div>
+      <Container maxWidth="xl" sx={{ py: { xs: 4, sm: 6, md: 8 }, mx: 'auto' }}>
+        <Paper
+          elevation={3}
+          sx={{
+            p: 8,
+            textAlign: 'center',
+            borderRadius: 2,
+          }}
+        >
+          <CircularProgress sx={{ mb: 3 }} />
+          <Typography variant="h6" color="text.secondary">
+            Loading solution...
+          </Typography>
+        </Paper>
+      </Container>
     );
   }
 
   if (!problem) {
     return (
-      <div className="max-w-4xl mx-auto">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Problem Not Found</h2>
-          <p className="text-gray-500 mb-6">The requested problem could not be found.</p>
-          <Link
-            href="/"
-            className="inline-block px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+      <Container maxWidth="xl" sx={{ py: { xs: 4, sm: 6, md: 8 }, mx: 'auto' }}>
+        <Paper
+          elevation={3}
+          sx={{
+            p: 6,
+            textAlign: 'center',
+            borderRadius: 2,
+          }}
+        >
+          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
+            Problem Not Found
+          </Typography>
+          <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+            The requested problem could not be found.
+          </Typography>
+          <Button
+            component={Link}
+            href="/archive"
+            variant="contained"
+            startIcon={<ArrowBack />}
           >
-            ← Back to Archive
-          </Link>
-        </div>
-      </div>
+            Back to Archive
+          </Button>
+        </Paper>
+      </Container>
     );
   }
 
@@ -112,104 +140,304 @@ export default function QuestionPage() {
     'This solution uses a two-pointer technique to find pairs. It is optimal because it only passes through the array once.';
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
-      {/* Back Link */}
-      <Link
-        href="/"
-        className="inline-flex items-center text-blue-600 hover:text-blue-800 transition-colors"
+    <Box sx={{ width: '100%' }}>
+      <Box 
+        sx={{ 
+          py: { xs: 4, sm: 6, md: 8 },
+          width: '100%',
+          maxWidth: '896px',
+          mx: 'auto',
+          px: { xs: 2, sm: 3, md: 4 },
+        }}
       >
-        <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-        </svg>
-        Back to Archive
-      </Link>
+      <Box sx={{ mb: 3 }}>
+        <Button
+          component={Link}
+          href="/archive"
+          startIcon={<ArrowBack />}
+          sx={{
+            color: 'grey.700',
+            '&:hover': {
+              color: 'grey.900',
+              bgcolor: 'grey.50',
+            },
+          }}
+        >
+          Back to Archive
+        </Button>
+      </Box>
 
       {/* Problem Card */}
-      <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
+      <Paper
+        elevation={0}
+        sx={{
+          borderRadius: 1,
+          overflow: 'hidden',
+          mb: 3,
+          border: '1px solid',
+          borderColor: 'divider',
+        }}
+      >
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-8 py-6 border-b border-gray-200">
-          <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold text-gray-900 mb-3">{problem.title}</h1>
-              <div className="flex items-center gap-3 flex-wrap">
-                <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getDifficultyColor(
-                    problem.difficulty || 'unknown'
-                  )}`}
-                >
-                  {problem.difficulty || 'Unknown'} Difficulty
-                </span>
-                {problem.category && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
-                    {problem.category}
-                  </span>
-                )}
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
-                  ✓ Verified Solution
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
+        <Box
+          sx={{
+            bgcolor: 'white',
+            p: { xs: 4, sm: 5, md: 6 },
+            borderBottom: 1,
+            borderColor: 'divider',
+          }}
+        >
+          <Typography
+            variant="h4"
+            component="h1"
+            gutterBottom
+            sx={{
+              fontWeight: 700,
+              mb: 3,
+              color: 'grey.900',
+            }}
+          >
+            {problem.title}
+          </Typography>
+          <Box sx={{ display: 'flex', gap: 1.5, flexWrap: 'wrap', alignItems: 'center' }}>
+            <Chip
+              label={`${problem.difficulty || 'Unknown'} Difficulty`}
+              variant="outlined"
+              size="small"
+              sx={{
+                fontWeight: 600,
+                textTransform: 'uppercase',
+                fontSize: '0.7rem',
+                borderColor: 'grey.300',
+                color: 'grey.700',
+              }}
+            />
+            {problem.category && (
+              <Chip
+                label={problem.category}
+                variant="outlined"
+                size="small"
+                sx={{ fontWeight: 500 }}
+              />
+            )}
+            <Chip
+              label="Verified Solution"
+              variant="outlined"
+              size="small"
+              sx={{ 
+                fontWeight: 500,
+                borderColor: 'grey.300',
+                color: 'grey.700',
+              }}
+            />
+          </Box>
+        </Box>
 
         {/* Problem Description */}
         {problem.description && (
-          <div className="px-8 py-6 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900 mb-3">Problem Description</h2>
-            <ProblemRenderer
-              description={problem.description}
-              honeypotUrl={`/q/${problem.id}`}
-            />
-          </div>
+          <Box
+            sx={{
+              p: { xs: 4, sm: 5, md: 6 },
+              borderBottom: 1,
+              borderColor: 'divider',
+              bgcolor: 'white',
+            }}
+          >
+            <Typography
+              variant="h5"
+              component="h2"
+              gutterBottom
+              sx={{
+                fontWeight: 600,
+                mb: 3,
+                pb: 2,
+                borderBottom: 2,
+                borderColor: 'divider',
+              }}
+            >
+              Problem Description
+            </Typography>
+            <Box sx={{ '& .prose': { maxWidth: 'none' } }}>
+              <ProblemRenderer
+                description={problem.description}
+                honeypotUrl={`/q/${problem.id}`}
+              />
+            </Box>
+          </Box>
         )}
 
         {/* Solution Section */}
-        <div className="px-8 py-6">
-          <div className="mb-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-3">Optimal Solution</h2>
-            <p className="text-gray-600 mb-4">
+        <Box sx={{ p: { xs: 4, sm: 5, md: 6 } }}>
+          <Box sx={{ mb: 4 }}>
+            <Typography
+              variant="h5"
+              component="h2"
+              gutterBottom
+              sx={{
+                fontWeight: 600,
+                mb: 2,
+                pb: 2,
+                borderBottom: 2,
+                borderColor: 'divider',
+              }}
+            >
+              Optimal Solution
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ lineHeight: 1.7 }}>
               This problem can be solved efficiently using an optimized approach. 
               The solution below demonstrates the most efficient method with optimal time and space complexity.
-            </p>
-          </div>
+            </Typography>
+          </Box>
 
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Python Implementation</h3>
-            <div className="bg-gray-900 rounded-lg p-6 overflow-x-auto shadow-inner">
-              <pre className="text-gray-100 font-mono text-sm leading-relaxed whitespace-pre-wrap">
+          <Box sx={{ mb: 4 }}>
+            <Typography
+              variant="h6"
+              component="h3"
+              gutterBottom
+              sx={{
+                fontWeight: 600,
+                mb: 2,
+              }}
+            >
+              Python Implementation
+            </Typography>
+            <Paper
+              elevation={0}
+              sx={{
+                borderRadius: 1,
+                overflow: 'hidden',
+                border: '1px solid',
+                borderColor: 'grey.300',
+                bgcolor: 'grey.900',
+                '& pre': {
+                  margin: 0,
+                  borderRadius: 0,
+                },
+              }}
+            >
+              <SyntaxHighlighter
+                language="python"
+                style={vscDarkPlus}
+                customStyle={{
+                  margin: 0,
+                  padding: '1.5rem',
+                  fontSize: '0.875rem',
+                  lineHeight: 1.7,
+                }}
+                showLineNumbers={false}
+              >
                 {displayAnswer}
-              </pre>
-            </div>
-          </div>
+              </SyntaxHighlighter>
+            </Paper>
+          </Box>
 
-          <div className="bg-blue-50 border-l-4 border-blue-400 rounded-r-lg p-6">
-            <h3 className="text-lg font-semibold text-blue-900 mb-2">Solution Explanation</h3>
-            <p className="text-blue-800 leading-relaxed">
+          <Box
+            sx={{
+              mb: 4,
+              borderLeft: '4px solid',
+              borderColor: 'grey.300',
+              bgcolor: 'grey.50',
+              borderRadius: '0 4px 4px 0',
+              p: 3,
+            }}
+          >
+            <Typography
+              variant="h6"
+              component="h3"
+              gutterBottom
+              sx={{
+                fontWeight: 600,
+                color: 'grey.900',
+                mb: 1,
+              }}
+            >
+              Solution Explanation
+            </Typography>
+            <Typography variant="body2" sx={{ color: 'grey.700', lineHeight: 1.7 }}>
               {displayExplanation}
-            </p>
-          </div>
+            </Typography>
+          </Box>
 
           {/* Complexity Info */}
-          <div className="mt-6 grid grid-cols-2 gap-4">
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div className="text-sm font-medium text-gray-500 mb-1">Time Complexity</div>
-              <div className="text-lg font-semibold text-gray-900">O(n)</div>
-            </div>
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-              <div className="text-sm font-medium text-gray-500 mb-1">Space Complexity</div>
-              <div className="text-lg font-semibold text-gray-900">O(1)</div>
-            </div>
-          </div>
-        </div>
-      </div>
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={6}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 3,
+                  borderRadius: 1,
+                  bgcolor: 'grey.50',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontWeight: 600,
+                    color: 'text.secondary',
+                    textTransform: 'uppercase',
+                    letterSpacing: 1,
+                    display: 'block',
+                    mb: 1,
+                  }}
+                >
+                  Time Complexity
+                </Typography>
+                <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                  O(n)
+                </Typography>
+              </Paper>
+            </Grid>
+            <Grid item xs={12} sm={6}>
+              <Paper
+                elevation={0}
+                sx={{
+                  p: 3,
+                  borderRadius: 1,
+                  bgcolor: 'grey.50',
+                  border: '1px solid',
+                  borderColor: 'divider',
+                }}
+              >
+                <Typography
+                  variant="caption"
+                  sx={{
+                    fontWeight: 600,
+                    color: 'text.secondary',
+                    textTransform: 'uppercase',
+                    letterSpacing: 1,
+                    display: 'block',
+                    mb: 1,
+                  }}
+                >
+                  Space Complexity
+                </Typography>
+                <Typography variant="h4" sx={{ fontWeight: 700 }}>
+                  O(1)
+                </Typography>
+              </Paper>
+            </Grid>
+          </Grid>
+        </Box>
+      </Paper>
 
       {/* Footer Note */}
-      <div className="bg-yellow-50 border-l-4 border-yellow-400 rounded-r-lg p-4">
-        <p className="text-yellow-800 text-sm m-0">
+      <Box
+        sx={{
+          borderLeft: '4px solid',
+          borderColor: 'grey.300',
+          bgcolor: 'grey.50',
+          borderRadius: '0 4px 4px 0',
+          p: 3,
+        }}
+      >
+        <Typography variant="body2" sx={{ fontWeight: 500, lineHeight: 1.7, color: 'grey.700' }}>
           <strong>Educational Use Only:</strong> This solution is provided for educational purposes. 
           Please ensure you understand the approach before using it in interviews.
-        </p>
-      </div>
-    </div>
+        </Typography>
+      </Box>
+      </Box>
+    </Box>
   );
 }

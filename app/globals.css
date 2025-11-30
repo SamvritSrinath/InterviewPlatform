@@ -54,7 +54,8 @@ a {
   padding: 1rem;
   border-radius: 0.25rem;
   overflow: auto;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
   font-size: 0.875rem;
   margin-bottom: 0.75rem;
   color: #1f2937;
@@ -67,7 +68,8 @@ a {
   padding-top: 0.125rem;
   padding-bottom: 0.125rem;
   border-radius: 0.125rem;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+    'Liberation Mono', 'Courier New', monospace;
   font-size: 0.875rem;
   color: #1f2937;
   font-weight: 400;
@@ -75,8 +77,27 @@ a {
 
 /* Remove default backticks from Tailwind Typography */
 .prose code::before {
-  content: "" !important;
+  content: '' !important;
 }
 .prose code::after {
-  content: "" !important;
+  content: '' !important;
+}
+
+/* Ensure question pages are properly centered and headers are hidden */
+/* Target docs and question layouts specifically */
+.bg-gray-50 > header,
+.bg-gray-50 > footer {
+  display: none !important;
+}
+
+/* Ensure proper centering for question pages */
+main.w-full {
+  width: 100% !important;
+}
+
+main.w-full > div.max-w-4xl {
+  width: 100% !important;
+  max-width: 896px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }

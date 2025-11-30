@@ -2,6 +2,25 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import {
+  Container,
+  Typography,
+  Box,
+  Paper,
+  TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Chip,
+  CircularProgress,
+  Alert,
+  Grid,
+  Card,
+  CardContent,
+  InputAdornment,
+} from '@mui/material';
+import { Search, Info, ArrowForward } from '@mui/icons-material';
 
 interface Problem {
   id: string;
@@ -52,16 +71,16 @@ export default function ArchivePage() {
     fetchProblems();
   }, []);
 
-  const getDifficultyColor = (difficulty: string) => {
+  const getDifficultyColor = (difficulty: string): 'success' | 'warning' | 'error' | 'default' => {
     switch (difficulty?.toLowerCase()) {
       case 'easy':
-        return 'bg-green-100 text-green-800 border-green-200';
+        return 'success';
       case 'medium':
-        return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+        return 'warning';
       case 'hard':
-        return 'bg-red-100 text-red-800 border-red-200';
+        return 'error';
       default:
-        return 'bg-gray-100 text-gray-800 border-gray-200';
+        return 'default';
     }
   };
 
@@ -74,126 +93,284 @@ export default function ArchivePage() {
   });
 
   return (
-    <div className="space-y-8">
-      {/* Header Section */}
-      <div className="space-y-4">
-        <h1 className="text-4xl font-bold text-gray-900">Tech Interview Solutions Archive</h1>
-        <p className="text-lg text-gray-600 max-w-3xl">
+    <Container maxWidth="md" sx={{ py: { xs: 4, sm: 6, md: 8 } }}>
+      <Box sx={{ mb: 6 }}>
+        <Typography
+          variant="h4"
+          component="h1"
+          gutterBottom
+          sx={{
+            fontWeight: 600,
+            mb: 2,
+          }}
+        >
+          Tech Interview Solutions Archive
+        </Typography>
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
           This repository contains detailed solutions and explanations for advanced algorithmic problems
           commonly asked in technical interviews at top tech companies.
-        </p>
-        <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
-          <p className="text-blue-700 text-sm m-0">
+        </Typography>
+        <Alert
+          severity="info"
+          icon={<Info />}
+          sx={{
+            borderLeft: '4px solid',
+            borderColor: 'primary.main',
+            bgcolor: 'primary.light',
+            '& .MuiAlert-icon': {
+              color: 'primary.main',
+            },
+          }}
+        >
+          <Typography variant="body2" sx={{ fontWeight: 500 }}>
             <strong>Note:</strong> This archive is intended for educational purposes only. 
             Please do not share these solutions directly during interviews.
-          </p>
-        </div>
-      </div>
+          </Typography>
+        </Alert>
+      </Box>
 
       {/* Search and Filter Section */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="search" className="block text-sm font-medium text-gray-700 mb-2">
-              Search Problems
-            </label>
-            <input
-              type="text"
-              id="search"
+      <Paper
+        elevation={3}
+        sx={{
+          p: { xs: 3, sm: 4, md: 6 },
+          borderRadius: 2,
+          mb: 4,
+        }}
+      >
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={6}>
+            <TextField
+              fullWidth
+              label="Search Problems"
+              placeholder="Search by title or description..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by title or description..."
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              InputProps={{
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <Search />
+                  </InputAdornment>
+                ),
+              }}
+              variant="outlined"
             />
-          </div>
-          <div>
-            <label htmlFor="difficulty" className="block text-sm font-medium text-gray-700 mb-2">
-              Filter by Difficulty
-            </label>
-            <select
-              id="difficulty"
-              value={difficultyFilter}
-              onChange={(e) => setDifficultyFilter(e.target.value)}
-              className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            >
-              <option value="all">All Difficulties</option>
-              <option value="easy">Easy</option>
-              <option value="medium">Medium</option>
-              <option value="hard">Hard</option>
-            </select>
-          </div>
-        </div>
-      </div>
+          </Grid>
+          <Grid item xs={12} md={6}>
+            <FormControl fullWidth>
+              <InputLabel>Filter by Difficulty</InputLabel>
+              <Select
+                value={difficultyFilter}
+                onChange={(e) => setDifficultyFilter(e.target.value)}
+                label="Filter by Difficulty"
+                variant="outlined"
+              >
+                <MenuItem value="all">All Difficulties</MenuItem>
+                <MenuItem value="easy">Easy</MenuItem>
+                <MenuItem value="medium">Medium</MenuItem>
+                <MenuItem value="hard">Hard</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+        </Grid>
+      </Paper>
 
       {/* Problems List */}
       {loading ? (
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
-          <p className="mt-4 text-gray-500">Loading problems...</p>
-        </div>
+        <Paper
+          elevation={3}
+          sx={{
+            p: 8,
+            textAlign: 'center',
+            borderRadius: 2,
+          }}
+        >
+          <CircularProgress sx={{ mb: 3 }} />
+          <Typography variant="h6" gutterBottom sx={{ fontWeight: 500 }}>
+            Loading problems...
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Please wait while we fetch the latest problems
+          </Typography>
+        </Paper>
       ) : filteredProblems.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-          <p className="text-gray-500 text-lg">No problems found.</p>
-          {searchTerm || difficultyFilter !== 'all' ? (
-            <p className="text-gray-400 text-sm mt-2">Try adjusting your search or filters.</p>
-          ) : (
-            <div className="mt-4">
-              <p className="text-gray-400 text-sm mb-4">
-                Unable to load problems. Please check your database connection.
-              </p>
-            </div>
-          )}
-        </div>
+        <Paper
+          elevation={3}
+          sx={{
+            p: 8,
+            textAlign: 'center',
+            borderRadius: 2,
+          }}
+        >
+          <Alert severity={searchTerm || difficultyFilter !== 'all' ? 'info' : 'warning'} sx={{ mb: 2 }}>
+            <Typography variant="h6" gutterBottom sx={{ fontWeight: 600 }}>
+              No problems found
+            </Typography>
+            <Typography variant="body2">
+              {searchTerm || difficultyFilter !== 'all' ? (
+                'Try adjusting your search or filters to find what you\'re looking for.'
+              ) : (
+                'Unable to load problems. Please check your database connection.'
+              )}
+            </Typography>
+          </Alert>
+        </Paper>
       ) : (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-semibold text-gray-900">
-              Available Solutions ({filteredProblems.length})
-            </h2>
-          </div>
-          <div className="grid gap-4">
+        <Box>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              mb: 4,
+              pb: 2,
+              borderBottom: 1,
+              borderColor: 'divider',
+            }}
+          >
+            <Typography variant="h5" sx={{ fontWeight: 600 }}>
+              Available Solutions
+            </Typography>
+            <Chip
+              label={`${filteredProblems.length} ${filteredProblems.length === 1 ? 'Problem' : 'Problems'}`}
+              color="primary"
+              sx={{ fontWeight: 600 }}
+            />
+          </Box>
+          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
             {filteredProblems.map((problem) => (
               <Link
                 key={problem.id}
                 href={`/q/${problem.id}`}
-                className="block bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md hover:border-blue-300 transition-all duration-200"
+                style={{ textDecoration: 'none' }}
               >
-                <div className="p-6">
-                  <div className="flex items-start justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <h3 className="text-xl font-semibold text-gray-900 mb-2 hover:text-blue-600 transition-colors">
+                <Card
+                  elevation={2}
+                  sx={{
+                    transition: 'all 0.3s ease',
+                    '&:hover': {
+                      elevation: 6,
+                      transform: 'translateY(-4px)',
+                      borderColor: 'primary.main',
+                    },
+                    border: '2px solid',
+                    borderColor: 'divider',
+                    borderRadius: 2,
+                  }}
+                >
+                  <CardContent sx={{ p: { xs: 3, sm: 4, md: 5 } }}>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'flex-start',
+                        gap: 2,
+                        mb: 2,
+                      }}
+                    >
+                      <Typography
+                        variant="h6"
+                        component="h3"
+                        sx={{
+                          fontWeight: 600,
+                          flex: 1,
+                          '&:hover': {
+                            color: 'primary.main',
+                          },
+                          transition: 'color 0.2s',
+                        }}
+                      >
                         {problem.title}
-                      </h3>
-                      <p className="text-gray-600 text-sm line-clamp-2 mb-4">
-                        {problem.description.replace(/<[^>]*>/g, '').substring(0, 200)}
-                        {problem.description.length > 200 ? '...' : ''}
-                      </p>
-                      <div className="flex items-center gap-3 flex-wrap">
-                        <span
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium border ${getDifficultyColor(
-                            problem.difficulty || 'unknown'
-                          )}`}
-                        >
-                          {problem.difficulty || 'Unknown'}
-                        </span>
-                        {problem.category && (
-                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-200">
-                            {problem.category}
-                          </span>
-                        )}
-                        <span className="text-xs text-gray-500 ml-auto">
-                          View Solution →
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                      </Typography>
+                      <ArrowForward
+                        sx={{
+                          color: 'text.secondary',
+                          transition: 'all 0.2s',
+                          '&:hover': {
+                            color: 'primary.main',
+                            transform: 'translateX(4px)',
+                          },
+                        }}
+                      />
+                    </Box>
+                    <Typography
+                      variant="body2"
+                      color="text.secondary"
+                      sx={{
+                        mb: 3,
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden',
+                        lineHeight: 1.7,
+                      }}
+                    >
+                      {(() => {
+                        const desc = problem.description || '';
+                        const text = desc
+                          .replace(/```[\s\S]*?```/g, '')
+                          .replace(/`[^`]+`/g, '')
+                          .replace(/#+\s+/g, '')
+                          .replace(/\*\*([^*]+)\*\*/g, '$1')
+                          .replace(/\*([^*]+)\*/g, '$1')
+                          .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
+                          .replace(/<[^>]*>/g, '')
+                          .trim();
+                        return text.length > 200 ? text.substring(0, 200) + '...' : text || 'No description available.';
+                      })()}
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 1.5,
+                        flexWrap: 'wrap',
+                        pt: 2,
+                        borderTop: 1,
+                        borderColor: 'divider',
+                      }}
+                    >
+                      <Chip
+                        label={problem.difficulty || 'Unknown'}
+                        color={getDifficultyColor(problem.difficulty || 'unknown')}
+                        size="small"
+                        sx={{
+                          fontWeight: 600,
+                          textTransform: 'uppercase',
+                          fontSize: '0.7rem',
+                        }}
+                      />
+                      {problem.category && (
+                        <Chip
+                          label={problem.category}
+                          variant="outlined"
+                          size="small"
+                          sx={{ fontWeight: 500 }}
+                        />
+                      )}
+                      <Box sx={{ flexGrow: 1 }} />
+                      <Typography
+                        variant="body2"
+                        color="primary"
+                        sx={{
+                          fontWeight: 600,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 0.5,
+                        }}
+                      >
+                        View Solution
+                        <ArrowForward sx={{ fontSize: '1rem' }} />
+                      </Typography>
+                    </Box>
+                  </CardContent>
+                </Card>
               </Link>
             ))}
-          </div>
-        </div>
+          </Box>
+        </Box>
       )}
-    </div>
+    </Container>
   );
 }
 

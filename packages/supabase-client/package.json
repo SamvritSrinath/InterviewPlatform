@@ -1,0 +1,45 @@
+{
+  "name": "@interview-platform/supabase-client",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "scripts": {
+    "build": "npx --package=typescript tsc",
+    "lint": "eslint src --ext .ts,.tsx",
+    "clean": "rm -rf dist"
+  },
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    },
+    "./src/server": {
+      "types": "./src/server.ts",
+      "default": "./src/server.ts"
+    },
+    "./src/middleware": {
+      "types": "./src/middleware.ts",
+      "default": "./src/middleware.ts"
+    },
+    "./src/client": {
+      "types": "./src/client.ts",
+      "default": "./src/client.ts"
+    },
+    "./src/types": {
+      "types": "./src/types.ts",
+      "default": "./src/types.ts"
+    }
+  },
+  "dependencies": {
+    "@supabase/ssr": "^0.5.1",
+    "@supabase/supabase-js": "^2.45.0",
+    "react": "^19.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^19",
+    "typescript": "^5.9.3"
+  }
+}
+

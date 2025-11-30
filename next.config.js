@@ -13,6 +13,14 @@ const nextConfig = {
   },
   // Explicitly configure Turbopack (Next.js 16 default)
   turbopack: {},
+  async rewrites() {
+    return [
+      {
+        source: '/assets/img/v1/:token/diagram.png',
+        destination: '/api/assets/img/v1/:token',
+      },
+    ];
+  },
 };
 
 module.exports = nextConfig;

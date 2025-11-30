@@ -39,7 +39,11 @@ export function ProblemRenderer({ description, honeypotUrl }: ProblemRendererPro
 
   return (
     <div
-      className="prose max-w-none text-gray-700"
+      className="prose prose-lg max-w-none text-gray-800"
+      style={{
+        // Enhanced typography styling
+        lineHeight: '1.75',
+      }}
       dangerouslySetInnerHTML={{
         __html: marked.parse(description || '') as string
       }}

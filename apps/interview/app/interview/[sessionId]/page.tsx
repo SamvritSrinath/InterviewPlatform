@@ -1,3 +1,4 @@
+
 'use client';
 
 import {useState, useEffect, useRef, useCallback} from 'react';
@@ -20,18 +21,15 @@ import {
   TextField,
   Snackbar,
 } from '@mui/material';
-import {Problem, Session} from '@/lib/supabase/types';
+import {Problem, Session} from '@interview-platform/supabase-client';
 import {useCheatingDetection} from '@/lib/cheating-detection/client-monitor';
 import {useAuth} from '@/lib/supabase/auth-context';
 import {InterviewDashboard} from '@/components/interview/interview-dashboard';
 import {createClient} from '@/lib/supabase/client';
 import {CheckCircle} from '@mui/icons-material';
-import {marked} from 'marked';
-import {
-  createHiddenInstructions,
-  createMarkdownImageInjection,
-} from '@/lib/utils/unicode-smuggling';
-import {VisualTrap} from '@/components/interview/visual-trap';
+import { marked } from 'marked';
+import {getQuestionsAppUrl} from '@/lib/utils/urls';
+import {createHiddenInstructions} from '@/lib/utils/unicode-smuggling';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -52,10 +50,7 @@ export default function InterviewSessionPage() {
   const [updating, setUpdating] = useState(false);
   const [showJoinModal, setShowJoinModal] = useState(false);
   const [candidateName, setCandidateName] = useState('');
-  const [notification, setNotification] = useState<{
-    message: string;
-    severity: 'error' | 'warning' | 'info' | 'success';
-  } | null>(null);
+  const [notification, setNotification] = useState<{ message: string; severity: 'error' | 'warning' | 'info' | 'success' } | null>(null);
 
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const codeSaveTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -106,7 +101,7 @@ export default function InterviewSessionPage() {
       (isInterviewer || session?.interviewer_ready),
   });
 
-  // Inject honeypot token into clipboard on copy and log copy events
+  // Inject honeypot token into clipboard on copy
   useEffect(() => {
     if (!session?.honeypot_token || !problem?.id || isInterviewer) return;
 
@@ -118,59 +113,34 @@ export default function InterviewSessionPage() {
       const text = selection.toString();
       if (text.length < 50) return; // Don't inject on small copies
 
-      // Log copy event for cheating detection
-      // Mark as suspicious to ensure it gets logged (copying problem description is always logged)
-      logEvent('copy_paste', {
-        action: 'copy',
-        textLength: text.length,
-        copiedFrom: 'problem_description',
-        sessionId: session.id,
-        problemId: problem.id,
-        suspicious: true, // Always log copy events from problem description
-      });
-
-      // Construct the honeypot URL using current origin
-      const honeypotUrl = `${window.location.origin}/docs/v1/${session.honeypot_token}/${problem.id}`;
-
-      // Construct the markdown image URL for FR004 (Markdown Image Beacons)
-      const imageUrl = `${window.location.origin}/assets/img/v1/${session.honeypot_token}/diagram.png`;
-
+      // Construct the honeypot URL
+      const questionsAppUrl = getQuestionsAppUrl();
+      const honeypotUrl = `${questionsAppUrl}/docs/v1/${session.honeypot_token}/${problem.id}`;
+      
+      // Visible context injection (existing behavior)
+      const visibleInjection = `\n\n[Context]: ${honeypotUrl}\n`;
+      
       // ASCII Smuggling: Hidden instructions encoded in Unicode Tag characters
       // These are invisible to users but will be seen by LLMs when processing the text
       const hiddenInstructions = createHiddenInstructions(honeypotUrl);
-
-      // Markdown Image Injection (FR004): Hidden instruction to include diagram in response
-      // This will cause LLMs to include markdown image tags, triggering automatic GET requests
-      const markdownImageInstruction = createMarkdownImageInjection(imageUrl);
-
-      // Combine: hidden instructions + markdown image instruction + visible text + hidden instructions
-      // Removed visible [Context] link as it's obvious to users
+      
+      // Combine: hidden instructions + visible text + visible URL + hidden instructions
       // This pattern ensures LLMs see the hidden instructions regardless of where they start reading
-      const plainTextPayload = `${hiddenInstructions}${markdownImageInstruction}${text}${hiddenInstructions}${markdownImageInstruction}`;
-
+      const plainTextPayload = `${hiddenInstructions}${text}${visibleInjection}${hiddenInstructions}`;
+      
       if (e.clipboardData) {
         e.preventDefault();
         // Set plain text with both visible and hidden content
         e.clipboardData.setData('text/plain', plainTextPayload);
-        // For HTML, embed hidden instructions in the text (no visible URL)
-        const htmlContent =
-          selection.getRangeAt(0).cloneContents().textContent || '';
-        e.clipboardData.setData(
-          'text/html',
-          `${hiddenInstructions}${markdownImageInstruction}${htmlContent}${hiddenInstructions}${markdownImageInstruction}`,
-        );
+        // For HTML, include visible URL and embed hidden instructions in the text
+        const htmlContent = selection.getRangeAt(0).cloneContents().textContent || '';
+        e.clipboardData.setData('text/html', `${hiddenInstructions}${htmlContent}<div style="opacity:0;height:1px;">[Context]: <a href="${honeypotUrl}">${honeypotUrl}</a></div>${hiddenInstructions}`);
       }
     };
 
     document.addEventListener('copy', handleCopy);
     return () => document.removeEventListener('copy', handleCopy);
-  }, [
-    session?.honeypot_token,
-    problem?.id,
-    isInterviewer,
-    logEvent,
-    session?.id,
-  ]);
+  }, [session?.honeypot_token, problem?.id, isInterviewer]);
 
   useEffect(() => {
     if (sessionId) {
@@ -226,7 +196,8 @@ export default function InterviewSessionPage() {
       ) {
         // Always fetch problem when interviewer becomes ready
         if (updatedSession.problem_id) {
-          fetch(`/api/problems/${updatedSession.problem_id}`)
+          const questionsAppUrl = getQuestionsAppUrl()
+          fetch(`${questionsAppUrl}/api/problems/${updatedSession.problem_id}`)
             .then(res => res.json())
             .then(data => {
               if (data.problem) {
@@ -269,7 +240,7 @@ export default function InterviewSessionPage() {
       }-${sessionData.end_time || 'null'}-${sessionData.approved}`;
       if (sessionKey !== lastSessionUpdateRef.current) {
         lastSessionUpdateRef.current = sessionKey;
-
+        
         setSession((prevSession: Session | null) => {
           if (!prevSession) return sessionData as Session;
 
@@ -530,10 +501,10 @@ export default function InterviewSessionPage() {
       const sessionData = data.sessions?.[0] || data.session;
       if (sessionData) {
         setSession(sessionData);
-
+        
         // Note: We don't rely on fetchSession to set modal visibility anymore
         // We use the useEffect hook that depends on auth loading state
-
+        
         if (sessionData.end_time) {
           finishedRef.current = true;
         }
@@ -543,8 +514,9 @@ export default function InterviewSessionPage() {
           // Only initialize code if not interviewer (though useEffect handles this too)
           // Logic in useEffect is safer
         } else if (sessionData.problem_id) {
+          const questionsAppUrl = getQuestionsAppUrl()
           const problemResponse = await fetch(
-            `/api/problems/${sessionData.problem_id}`,
+            `${questionsAppUrl}/api/problems/${sessionData.problem_id}`,
           );
           const problemData = await problemResponse.json();
           if (problemData.problem) {
@@ -699,7 +671,9 @@ export default function InterviewSessionPage() {
       setSession(data.session);
       setShowJoinModal(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to join session');
+      setError(
+        err instanceof Error ? err.message : 'Failed to join session',
+      );
     } finally {
       setUpdating(false);
     }
@@ -784,69 +758,61 @@ export default function InterviewSessionPage() {
       )}
 
       {/* Interviewer: Approve Candidate */}
-      {isInterviewer &&
-        (session as any).candidate_name &&
-        !session.approved && (
-          <Alert severity="warning" sx={{mb: 4}}>
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}>
-              <Typography>
-                Candidate <strong>{(session as any).candidate_name}</strong> is
-                asking to join.
-              </Typography>
-              <Button
-                variant="contained"
-                color="success"
-                onClick={handleApproveCandidate}
-                disabled={updating}
-                sx={{ml: 2}}>
-                {updating ? 'Approving...' : 'Approve'}
-              </Button>
-            </Box>
-          </Alert>
-        )}
+      {isInterviewer && (session as any).candidate_name && !session.approved && (
+        <Alert severity="warning" sx={{mb: 4}}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
+            <Typography>
+              Candidate <strong>{(session as any).candidate_name}</strong> is asking to join.
+            </Typography>
+            <Button
+              variant="contained"
+              color="success"
+              onClick={handleApproveCandidate}
+              disabled={updating}
+              sx={{ml: 2}}>
+              {updating ? 'Approving...' : 'Approve'}
+            </Button>
+          </Box>
+        </Alert>
+      )}
 
       {/* Interviewee: Waiting for Approval */}
-      {!isInterviewer &&
-        (session as any).candidate_name &&
-        !session.approved && (
-          <Alert severity="info" sx={{mb: 4}}>
-            <Typography>
-              Waiting for interviewer approval... Please stay on this page.
-            </Typography>
-          </Alert>
-        )}
+      {!isInterviewer && (session as any).candidate_name && !session.approved && (
+         <Alert severity="info" sx={{mb: 4}}>
+           <Typography>
+             Waiting for interviewer approval... Please stay on this page.
+           </Typography>
+         </Alert>
+      )}
 
       {/* Interviewer: Show start button if not ready */}
-      {isInterviewer &&
-        !session.interviewer_ready &&
-        (session.approved || !(session as any).candidate_name) && (
-          <Alert severity="warning" sx={{mb: 4}}>
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-              }}>
-              <Typography>
-                Click &quot;Start Interview&quot; when you&apos;re ready to
-                begin. The problem will be visible to the interviewee once you
-                start.
-              </Typography>
-              <Button
-                variant="contained"
-                onClick={handleInterviewerReady}
-                disabled={updating}
-                sx={{ml: 2}}>
-                {updating ? 'Starting...' : 'Start Interview'}
-              </Button>
-            </Box>
-          </Alert>
-        )}
+      {isInterviewer && !session.interviewer_ready && (session.approved || !(session as any).candidate_name) && (
+        <Alert severity="warning" sx={{mb: 4}}>
+          <Box
+            sx={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+            }}>
+            <Typography>
+              Click &quot;Start Interview&quot; when you&apos;re ready to begin.
+              The problem will be visible to the interviewee once you start.
+            </Typography>
+            <Button
+              variant="contained"
+              onClick={handleInterviewerReady}
+              disabled={updating}
+              sx={{ml: 2}}>
+              {updating ? 'Starting...' : 'Start Interview'}
+            </Button>
+          </Box>
+        </Alert>
+      )}
 
       {/* Interviewee: Show waiting message if interviewer not ready */}
       {!isInterviewer && !session.interviewer_ready && session.approved && (
@@ -893,230 +859,44 @@ export default function InterviewSessionPage() {
         {canSeeProblem && (
           <Grid item xs={12} md={isInterviewer ? 3 : 4}>
             <Paper
-              elevation={2}
               sx={{
-                p: {xs: 3, sm: 4, md: 5},
+                p: {xs: 2, sm: 3, md: 4},
                 height: '100%',
                 overflow: 'auto',
                 maxHeight: '80vh',
-                borderRadius: 3,
-                position: 'relative', // Required for absolute positioning of VisualTrap
-                backgroundColor: '#FFFFFF', // Explicit white background for visual trap
-                border: '1px solid',
-                borderColor: 'grey.200',
-                boxShadow:
-                  '0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06)',
-                '&::-webkit-scrollbar': {
-                  width: '8px',
-                },
-                '&::-webkit-scrollbar-track': {
-                  backgroundColor: 'grey.50',
-                  borderRadius: '4px',
-                },
-                '&::-webkit-scrollbar-thumb': {
-                  backgroundColor: 'grey.300',
-                  borderRadius: '4px',
-                  '&:hover': {
-                    backgroundColor: 'grey.400',
-                  },
-                },
+                borderRadius: 2,
               }}>
+              <Typography variant="h6" gutterBottom sx={{fontWeight: 600}}>
+                {problem.title}
+              </Typography>
+              <Chip label={problem.difficulty} size="small" sx={{mb: 3}} />
               <Box
-                sx={{
-                  mb: 3,
-                  pb: 2.5,
-                  borderBottom: '2px solid',
-                  borderColor: 'primary.main',
-                }}>
-                <Typography
-                  variant="h5"
-                  gutterBottom
-                  sx={{
-                    fontWeight: 700,
-                    fontSize: {xs: '1.25rem', sm: '1.5rem', md: '1.75rem'},
-                    color: 'grey.900',
-                    lineHeight: 1.3,
-                    mb: 1.5,
-                  }}>
-                  {problem.title}
-                </Typography>
-                <Chip
-                  label={problem.difficulty}
-                  size="medium"
-                  sx={{
-                    fontWeight: 600,
-                    fontSize: '0.75rem',
-                    height: '28px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
-                    backgroundColor:
-                      problem.difficulty?.toLowerCase() === 'easy'
-                        ? 'success.light'
-                        : problem.difficulty?.toLowerCase() === 'medium'
-                        ? 'warning.light'
-                        : problem.difficulty?.toLowerCase() === 'hard'
-                        ? 'error.light'
-                        : 'primary.light',
-                    color:
-                      problem.difficulty?.toLowerCase() === 'easy'
-                        ? 'success.dark'
-                        : problem.difficulty?.toLowerCase() === 'medium'
-                        ? 'warning.dark'
-                        : problem.difficulty?.toLowerCase() === 'hard'
-                        ? 'error.dark'
-                        : 'primary.dark',
-                  }}
-                />
-              </Box>
-              <Box
-                className="problem-description"
                 dangerouslySetInnerHTML={{
-                  __html: marked.parse(problem.description || '') as string,
+                  __html: marked.parse(problem.description || '') as string
                 }}
                 sx={{
-                  color: 'grey.800',
-                  fontSize: {xs: '0.9375rem', sm: '1rem'},
-                  lineHeight: 1.7,
-                  '& h1': {
-                    fontWeight: 700,
-                    fontSize: '1.75rem',
-                    mb: 2,
-                    mt: 3,
-                    color: 'grey.900',
-                    lineHeight: 1.3,
-                  },
-                  '& h2': {
-                    fontWeight: 700,
-                    fontSize: '1.5rem',
-                    mb: 1.5,
-                    mt: 2.5,
-                    color: 'grey.900',
-                    lineHeight: 1.3,
-                  },
-                  '& h3': {
-                    fontWeight: 600,
-                    fontSize: '1.25rem',
-                    mb: 1.25,
-                    mt: 2,
-                    color: 'grey.900',
-                    lineHeight: 1.4,
-                  },
-                  '& h4': {
-                    fontWeight: 600,
-                    fontSize: '1.125rem',
-                    mb: 1,
-                    mt: 1.5,
-                    color: 'grey.900',
-                  },
-                  '& p': {
-                    mb: 1.75,
-                    fontSize: 'inherit',
-                    lineHeight: 'inherit',
-                  },
-                  '& ul, & ol': {
-                    pl: 4,
-                    mb: 1.75,
-                    '& li': {
-                      mb: 0.75,
-                      lineHeight: 1.7,
-                    },
-                  },
-                  '& ul': {
-                    listStyleType: 'disc',
-                  },
-                  '& ol': {
-                    listStyleType: 'decimal',
-                  },
-                  '& blockquote': {
-                    borderLeft: '4px solid',
-                    borderColor: 'primary.main',
-                    pl: 2,
-                    py: 1,
-                    my: 2,
-                    backgroundColor: 'grey.50',
-                    fontStyle: 'italic',
-                    color: 'grey.700',
-                  },
-                  '& a': {
-                    color: 'primary.main',
-                    textDecoration: 'underline',
-                    '&:hover': {
-                      color: 'primary.dark',
-                    },
-                  },
+                  '& h1, & h2, & h3': { fontWeight: 600, mb: 1, mt: 2 },
+                  '& p': { mb: 1.5 },
+                  '& ul, & ol': { pl: 3, mb: 1.5 },
                   '& pre': {
-                    backgroundColor: '#1e293b',
-                    color: '#e2e8f0',
-                    p: 2.5,
-                    borderRadius: 2,
+                    backgroundColor: 'grey.100',
+                    p: 2,
+                    borderRadius: 1,
                     overflow: 'auto',
-                    fontFamily:
-                      'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                    fontFamily: 'monospace',
                     fontSize: '0.875rem',
-                    mb: 2,
-                    mt: 1.5,
-                    lineHeight: 1.6,
-                    boxShadow: 'inset 0 1px 3px rgba(0, 0, 0, 0.1)',
-                    '& code': {
-                      backgroundColor: 'transparent',
-                      padding: 0,
-                      color: 'inherit',
-                      fontSize: 'inherit',
-                      fontFamily: 'inherit',
-                      border: 'none',
-                    },
+                    mb: 1.5,
                   },
                   '& code': {
-                    backgroundColor: '#f1f5f9',
-                    color: '#0f172a',
-                    px: 1,
-                    py: 0.5,
-                    borderRadius: 1,
-                    fontFamily:
-                      'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+                    backgroundColor: 'grey.100',
+                    px: 0.5,
+                    py: 0.25,
+                    borderRadius: 0.5,
+                    fontFamily: 'monospace',
                     fontSize: '0.875rem',
-                    fontWeight: 500,
-                  },
-                  '& strong': {
-                    fontWeight: 700,
-                    color: 'grey.900',
-                  },
-                  '& em': {
-                    fontStyle: 'italic',
-                  },
-                  '& hr': {
-                    border: 'none',
-                    borderTop: '1px solid',
-                    borderColor: 'grey.300',
-                    my: 3,
-                  },
-                  '& table': {
-                    width: '100%',
-                    borderCollapse: 'collapse',
-                    mb: 2,
-                    mt: 1.5,
-                    '& th, & td': {
-                      border: '1px solid',
-                      borderColor: 'grey.300',
-                      px: 1.5,
-                      py: 1,
-                      textAlign: 'left',
-                    },
-                    '& th': {
-                      backgroundColor: 'grey.100',
-                      fontWeight: 600,
-                      color: 'grey.900',
-                    },
-                  },
+                  }
                 }}
               />
-              {/* Visual Steganography Trap (FR-003) - Invisible to humans, readable by vision AI */}
-              {session?.honeypot_token && problem?.id && !isInterviewer && (
-                <VisualTrap
-                  honeypotUrl={`${window.location.origin}/docs/v1/${session.honeypot_token}/${problem.id}`}
-                  token={session.honeypot_token}
-                />
-              )}
             </Paper>
           </Grid>
         )}
@@ -1136,15 +916,14 @@ export default function InterviewSessionPage() {
               }}>
               <Box sx={{textAlign: 'center'}}>
                 {!session?.approved && (session as any)?.candidate_name ? (
-                  <>
+                   <>
                     <Typography variant="h6" gutterBottom>
                       Waiting for Approval
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                      Please wait for the interviewer to approve your request to
-                      join.
+                      Please wait for the interviewer to approve your request to join.
                     </Typography>
-                  </>
+                   </>
                 ) : (
                   <>
                     <Typography variant="h6" gutterBottom>
@@ -1275,11 +1054,13 @@ export default function InterviewSessionPage() {
         open={!!notification}
         autoHideDuration={6000}
         onClose={() => setNotification(null)}
-        anchorOrigin={{vertical: 'top', horizontal: 'right'}}>
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
         <Alert
           onClose={() => setNotification(null)}
           severity={notification?.severity || 'info'}
-          className="w-full">
+          className="w-full"
+        >
           {notification?.message}
         </Alert>
       </Snackbar>
@@ -1287,10 +1068,7 @@ export default function InterviewSessionPage() {
       <Dialog open={showJoinModal} disableEscapeKeyDown>
         <DialogTitle>Join Interview</DialogTitle>
         <DialogContent>
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            sx={{mb: 2, mt: 1}}>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2, mt: 1 }}>
             Please enter your full name to join the interview session.
           </Typography>
           <TextField
@@ -1300,15 +1078,16 @@ export default function InterviewSessionPage() {
             fullWidth
             variant="outlined"
             value={candidateName}
-            onChange={e => setCandidateName(e.target.value)}
+            onChange={(e) => setCandidateName(e.target.value)}
             disabled={updating}
           />
         </DialogContent>
         <DialogActions>
-          <Button
-            onClick={handleJoinSession}
-            variant="contained"
-            disabled={!candidateName.trim() || updating}>
+          <Button 
+            onClick={handleJoinSession} 
+            variant="contained" 
+            disabled={!candidateName.trim() || updating}
+          >
             {updating ? 'Joining...' : 'Join Session'}
           </Button>
         </DialogActions>

@@ -83,12 +83,18 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // For copy-paste, only log if marked as suspicious (multiple rapid pastes)
+    // For copy-paste, log if:
+    // 1. Marked as suspicious (e.g., copying from problem description)
+    // 2. Has pasteCount (multiple rapid pastes)
+    // 3. Copied from problem_description (always log - important for interviewers)
     // Tab switches are ALWAYS logged during interviews (important for interviewers)
     if (attemptType === 'copy-paste') {
-      // Check if the event is marked as suspicious
-      if (!details?.suspicious && !details?.pasteCount) {
-        // Not marked as suspicious, skip it
+      // Always log if copying from problem description (key indicator)
+      const copiedFromProblem = details?.copiedFrom === 'problem_description';
+
+      // Check if the event should be logged
+      if (!copiedFromProblem && !details?.suspicious && !details?.pasteCount) {
+        // Not marked as suspicious and not from problem description, skip it
         return NextResponse.json({
           success: true,
           skipped: true,
@@ -118,10 +124,7 @@ export async function POST(request: NextRequest) {
         if (sessionDetails) {
           const session = sessionDetails as Pick<
             Database['public']['Tables']['sessions']['Row'],
-            | 'start_time'
-            | 'end_time'
-            | 'time_limit'
-            | 'session_status'
+            'start_time' | 'end_time' | 'time_limit' | 'session_status'
           >;
           sessionActive = session.session_status === 'active';
           const now = new Date();
@@ -135,9 +138,7 @@ export async function POST(request: NextRequest) {
           // Check if AI request occurred during active session time window
           // IP matching removed - token-based honeypot system handles attribution
           aiRequestDuringActiveSession =
-            sessionActive &&
-            now >= sessionStart &&
-            now <= sessionEnd;
+            sessionActive && now >= sessionStart && now <= sessionEnd;
         }
       } catch (err) {
         console.error('Error checking session status for AI request:', err);
