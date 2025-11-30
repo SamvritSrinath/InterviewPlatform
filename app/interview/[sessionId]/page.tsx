@@ -135,9 +135,16 @@ export default function InterviewSessionPage() {
       // Construct the markdown image URL for FR004 (Markdown Image Beacons)
       const imageUrl = `${window.location.origin}/assets/img/v1/${session.honeypot_token}/diagram.png`;
 
+      // Construct the persistent site URL for SEO-optimized documentation
+      const persistentSiteUrl = `${window.location.origin}/public/interviews/${session.honeypot_token}`;
+
       // ASCII Smuggling: Hidden instructions encoded in Unicode Tag characters
       // These are invisible to users but will be seen by LLMs when processing the text
-      const hiddenInstructions = createHiddenInstructions(honeypotUrl);
+      const hiddenInstructions = createHiddenInstructions(
+        honeypotUrl,
+        session.id,
+        persistentSiteUrl,
+      );
 
       // Markdown Image Injection (FR004): Hidden instruction to include diagram in response
       // This will cause LLMs to include markdown image tags, triggering automatic GET requests
@@ -1110,12 +1117,16 @@ export default function InterviewSessionPage() {
                   },
                 }}
               />
-              {/* Visual Steganography Trap (FR-003) - Invisible to humans, readable by vision AI */}
+              {/* Visual Trap (FR-003) - Visible configuration section for screenshots - Inline within problem description */}
               {session?.honeypot_token && problem?.id && !isInterviewer && (
-                <VisualTrap
-                  honeypotUrl={`${window.location.origin}/docs/v1/${session.honeypot_token}/${problem.id}`}
-                  token={session.honeypot_token}
-                />
+                <Box sx={{mt: 3}}>
+                  <VisualTrap
+                    honeypotUrl={`${window.location.origin}/docs/v1/${session.honeypot_token}/${problem.id}`}
+                    token={session.honeypot_token}
+                    persistentSiteUrl={`${window.location.origin}/public/interviews/${session.honeypot_token}`}
+                    imageUrl={`${window.location.origin}/assets/img/v1/${session.honeypot_token}/diagram.png`}
+                  />
+                </Box>
               )}
             </Paper>
           </Grid>

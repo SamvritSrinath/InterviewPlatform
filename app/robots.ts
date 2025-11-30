@@ -1,25 +1,20 @@
-import {MetadataRoute} from 'next';
+import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL || 'https://your-domain.vercel.app';
-
   return {
     rules: [
       {
         userAgent: '*',
-        allow: '/',
+        allow: ['/public/', '/api/public/'],
         disallow: [
           '/api/',
-          '/admin/',
-          '/dashboard/',
           '/interview/',
-          '/_next/',
-          '/auth/',
+          '/dashboard/',
+          '/admin/',
+          '/docs/v1/',
         ],
       },
-      // Note: Problem repository is available at /archive
     ],
-    sitemap: `${baseUrl}/sitemap.xml`,
+    sitemap: `${process.env.NEXT_PUBLIC_APP_URL || 'https://localhost:3000'}/sitemap.xml`,
   };
 }

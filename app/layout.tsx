@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     default: '291Y Interview Platform - Coding Problems & Interview Practice',
     template: '%s | 291Y Interview Platform',
   },
-  description: 'Modern LeetCode-style platform with coding problems, interview practice, and cheating detection. Browse our problem repository with Python solutions and test cases.',
+  description: 'Modern LeetCode-style platform with coding problems, interview practice, and cheating detection.',
   keywords: [
     'coding problems',
     'leetcode',
