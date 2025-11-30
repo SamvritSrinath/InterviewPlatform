@@ -1,4 +1,0 @@
-{
-  "buildCommand": "cd ../.. && npm ci && cd apps/interview && npm install --no-save typescript @types/node @types/react @types/react-dom && cd ../.. && turbo run build --filter=interview",
-  "outputDirectory": ".next"
-}
