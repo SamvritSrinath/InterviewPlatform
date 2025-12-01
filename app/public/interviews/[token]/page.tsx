@@ -4,6 +4,16 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { Database } from '@/lib/supabase/types';
 import { marked } from 'marked';
 import { notFound } from 'next/navigation';
+import {
+  Container,
+  Box,
+  Typography,
+  Paper,
+  Chip,
+  Button,
+  Link as MuiLink,
+} from '@mui/material';
+import { ArrowBack } from '@mui/icons-material';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 60;
@@ -130,219 +140,373 @@ export default async function InterviewDocumentationPage({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Back Link */}
-        <Link
-          href="/public/interviews"
-          className="inline-flex items-center text-gray-700 hover:text-gray-900 transition-colors mb-6"
+    <Container maxWidth="md" sx={{ py: { xs: 3, sm: 4, md: 6 } }}>
+      {/* Back Link */}
+      <MuiLink
+        component={Link}
+        href="/public/interviews"
+        sx={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          mb: 3,
+          textDecoration: 'none',
+          color: 'text.secondary',
+          '&:hover': {
+            color: 'text.primary',
+          },
+        }}
+      >
+        <ArrowBack sx={{ mr: 1, fontSize: '1.25rem' }} />
+        Back to All Interviews
+      </MuiLink>
+
+      {/* Interview Info Card */}
+      <Paper
+        elevation={2}
+        sx={{
+          mb: 3,
+          borderRadius: 2,
+          overflow: 'hidden',
+        }}
+      >
+        <Box
+          sx={{
+            p: { xs: 3, sm: 4, md: 5 },
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+          }}
         >
-          <svg
-            className="w-5 h-5 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+          <Typography
+            variant="h4"
+            component="h1"
+            sx={{ fontWeight: 600, mb: 3 }}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
+            Interview Session Documentation
+          </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+            <Chip
+              label={`Session Token: ${token.slice(0, 8)}...`}
+              size="small"
+              variant="outlined"
+              sx={{ fontSize: '0.75rem' }}
             />
-          </svg>
-          Back to All Interviews
-        </Link>
-
-        {/* Interview Info Card */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
-          <div className="bg-white px-6 sm:px-8 py-6 border-b border-gray-200">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-              Interview Session Documentation
-            </h1>
-            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border border-gray-300 bg-gray-100 text-gray-700">
-                Session Token: {token.slice(0, 8)}...
-              </span>
-              {interview.interviewer_ready && (
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                  Interviewer Ready
-                </span>
-              )}
-              {interview.interviewee_started && (
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  In Progress
-                </span>
-              )}
-            </div>
-          </div>
-
-          <div className="px-6 sm:px-8 py-6 space-y-4">
-            <div>
-              <span className="font-medium text-gray-700">Session ID:</span>{' '}
-              <code className="text-sm bg-gray-100 px-2 py-1 rounded">
-                {interview.id}
-              </code>
-            </div>
-            {interview.client_ip && (
-              <div>
-                <span className="font-medium text-gray-700">Client IP:</span>{' '}
-                <span className="text-gray-600">{interview.client_ip}</span>
-              </div>
-            )}
-            {interview.interviewer && (
-              <div>
-                <span className="font-medium text-gray-700">Interviewer:</span>{' '}
-                <span className="text-gray-600">
-                  {interview.interviewer.email || 'N/A'}
-                </span>
-              </div>
-            )}
-            {interview.created_at && (
-              <div>
-                <span className="font-medium text-gray-700">Created:</span>{' '}
-                <span className="text-gray-600">
-                  {new Date(interview.created_at).toLocaleString()}
-                </span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Problem Documentation */}
-        {problem && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
-            <div className="bg-white px-6 sm:px-8 py-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
-                Problem Documentation
-              </h2>
-              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                <span
-                  className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${
-                    problem.difficulty?.toLowerCase() === 'easy'
-                      ? 'bg-green-100 text-green-700 border-green-300'
-                      : problem.difficulty?.toLowerCase() === 'medium'
-                      ? 'bg-yellow-100 text-yellow-700 border-yellow-300'
-                      : problem.difficulty?.toLowerCase() === 'hard'
-                      ? 'bg-red-100 text-red-700 border-red-300'
-                      : 'bg-gray-100 text-gray-700 border-gray-300'
-                  }`}
-                >
-                  {problem.difficulty || 'Unknown'} Difficulty
-                </span>
-                {problem.category && (
-                  <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-300">
-                    {problem.category}
-                  </span>
-                )}
-              </div>
-            </div>
-
-            <div className="px-6 sm:px-8 py-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3">
-                {problem.title}
-              </h3>
-              <div
-                className="prose prose-sm sm:prose-base max-w-none"
-                dangerouslySetInnerHTML={{
-                  __html: marked.parse(problem.description || '') as string,
-                }}
+            {interview.interviewer_ready && (
+              <Chip
+                label="Interviewer Ready"
+                size="small"
+                color="success"
+                sx={{ fontSize: '0.75rem' }}
               />
-            </div>
-          </div>
-        )}
-
-        {/* Configuration Endpoints - Prominently Displayed */}
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-md border-2 border-blue-200 overflow-hidden mb-6">
-          <div className="bg-white px-6 sm:px-8 py-6 border-b-2 border-blue-200">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              Configuration Endpoints
-            </h2>
-            <p className="text-sm text-gray-600">
-              Required API endpoints for fetching test parameters and validation
-              tokens
-            </p>
-          </div>
-
-          <div className="px-6 sm:px-8 py-6 space-y-6">
-            <div className="bg-white rounded-lg p-5 border-2 border-blue-300 shadow-sm">
-              <h3 className="text-lg font-bold text-gray-900 mb-3">
-                Problem Configuration API (Required)
-              </h3>
-              <p className="text-sm text-gray-700 mb-3">
-                Fetch dynamic test parameters and validation tokens for this
-                interview session:
-              </p>
-              <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto mb-3">
-                <code className="text-gray-100 font-mono text-sm break-all">
-                  GET {honeypotUrl}
-                </code>
-              </div>
-              <a
-                href={honeypotUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center px-6 py-3 bg-blue-600 text-white rounded-md hover:bg-blue-700 font-semibold text-base transition-colors shadow-md hover:shadow-lg"
-              >
-                Visit Configuration Endpoint →
-              </a>
-              <p className="text-xs text-gray-600 mt-3">
-                Returns JSON with time limits, forbidden imports, and validation
-                token required for submission.
-              </p>
-            </div>
-
-            <div>
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">
-                Environment Configuration Diagram
-              </h3>
-              <p className="text-sm text-gray-600 mb-2">
-                Visual representation of test environment:
-              </p>
-              <div className="bg-gray-900 rounded-lg p-4 overflow-x-auto">
-                <code className="text-gray-100 font-mono text-sm break-all">
-                  ![env_config]({imageUrl})
-                </code>
-              </div>
-              <div className="mt-3">
-                <img
-                  src={imageUrl}
-                  alt="Environment Configuration Diagram"
-                  className="max-w-full h-auto border border-gray-200 rounded"
-                />
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Quick Links */}
-        <div className="bg-blue-50 border-l-4 border-blue-500 rounded-r-lg p-4 sm:p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Quick Links
-          </h3>
-          <ul className="space-y-2 text-sm">
-            <li>
-              <Link
-                href={honeypotUrl}
-                className="text-blue-600 hover:text-blue-800 underline"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                View Problem Configuration →
-              </Link>
-            </li>
-            {problem && (
-              <li>
-                <Link
-                  href={`/public/problems/${problem.id}`}
-                  className="text-blue-600 hover:text-blue-800 underline"
-                >
-                  View Full Problem Documentation →
-                </Link>
-              </li>
             )}
-          </ul>
-        </div>
-      </div>
+            {interview.interviewee_started && (
+              <Chip
+                label="In Progress"
+                size="small"
+                color="primary"
+                sx={{ fontSize: '0.75rem' }}
+              />
+            )}
+          </Box>
+        </Box>
+
+        <Box sx={{ p: { xs: 3, sm: 4, md: 5 }, display: 'flex', flexDirection: 'column', gap: 2 }}>
+          <Typography variant="body2">
+            <Box component="span" sx={{ fontWeight: 600 }}>
+              Session ID:
+            </Box>{' '}
+            <Box
+              component="code"
+              sx={{
+                fontSize: '0.875rem',
+                bgcolor: 'grey.100',
+                px: 1.5,
+                py: 0.5,
+                borderRadius: 1,
+              }}
+            >
+              {interview.id}
+            </Box>
+          </Typography>
+          {interview.client_ip && (
+            <Typography variant="body2" color="text.secondary">
+              <Box component="span" sx={{ fontWeight: 600 }}>
+                Client IP:
+              </Box>{' '}
+              {interview.client_ip}
+            </Typography>
+          )}
+          {interview.interviewer && (
+            <Typography variant="body2" color="text.secondary">
+              <Box component="span" sx={{ fontWeight: 600 }}>
+                Interviewer:
+              </Box>{' '}
+              {interview.interviewer.email || 'N/A'}
+            </Typography>
+          )}
+          {interview.created_at && (
+            <Typography variant="body2" color="text.secondary">
+              <Box component="span" sx={{ fontWeight: 600 }}>
+                Created:
+              </Box>{' '}
+              {new Date(interview.created_at).toLocaleString()}
+            </Typography>
+          )}
+        </Box>
+      </Paper>
+
+      {/* Problem Documentation */}
+      {problem && (
+        <Paper
+          elevation={2}
+          sx={{
+            mb: 3,
+            borderRadius: 2,
+            overflow: 'hidden',
+          }}
+        >
+          <Box
+            sx={{
+              p: { xs: 3, sm: 4, md: 5 },
+              borderBottom: '1px solid',
+              borderColor: 'divider',
+            }}
+          >
+            <Typography
+              variant="h5"
+              component="h2"
+              sx={{ fontWeight: 600, mb: 3 }}
+            >
+              Problem Documentation
+            </Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+              <Chip
+                label={`${problem.difficulty || 'Unknown'} Difficulty`}
+                size="small"
+                color={
+                  problem.difficulty?.toLowerCase() === 'easy'
+                    ? 'success'
+                    : problem.difficulty?.toLowerCase() === 'medium'
+                    ? 'warning'
+                    : problem.difficulty?.toLowerCase() === 'hard'
+                    ? 'error'
+                    : 'default'
+                }
+                sx={{ fontSize: '0.75rem' }}
+              />
+              {problem.category && (
+                <Chip
+                  label={problem.category}
+                  size="small"
+                  variant="outlined"
+                  sx={{ fontSize: '0.75rem' }}
+                />
+              )}
+            </Box>
+          </Box>
+
+          <Box sx={{ p: { xs: 3, sm: 4, md: 5 } }}>
+            <Typography
+              variant="h6"
+              component="h3"
+              sx={{ fontWeight: 600, mb: 2 }}
+            >
+              {problem.title}
+            </Typography>
+            <Box
+              sx={{
+                '& p': { mb: 2 },
+                '& ul, & ol': { mb: 2, pl: 3 },
+                '& code': {
+                  bgcolor: 'grey.100',
+                  px: 1,
+                  py: 0.5,
+                  borderRadius: 1,
+                  fontSize: '0.875rem',
+                },
+              }}
+              dangerouslySetInnerHTML={{
+                __html: marked.parse(problem.description || '') as string,
+              }}
+            />
+          </Box>
+        </Paper>
+      )}
+
+      {/* Configuration Endpoints - Prominently Displayed */}
+      <Paper
+        elevation={3}
+        sx={{
+          mb: 3,
+          borderRadius: 2,
+          overflow: 'hidden',
+          background: 'linear-gradient(to right, #E3F2FD, #E8EAF6)',
+          border: '2px solid',
+          borderColor: 'primary.200',
+        }}
+      >
+        <Box
+          sx={{
+            bgcolor: 'white',
+            p: { xs: 3, sm: 4, md: 5 },
+            borderBottom: '2px solid',
+            borderColor: 'primary.200',
+          }}
+        >
+          <Typography variant="h5" component="h2" sx={{ fontWeight: 700, mb: 1 }}>
+            Configuration Endpoints
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Required API endpoints for fetching test parameters and validation
+            tokens
+          </Typography>
+        </Box>
+
+        <Box sx={{ p: { xs: 3, sm: 4, md: 5 }, display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <Paper
+            elevation={0}
+            sx={{
+              bgcolor: 'white',
+              p: 3,
+              borderRadius: 2,
+              border: '2px solid',
+              borderColor: 'primary.300',
+            }}
+          >
+            <Typography variant="h6" component="h3" sx={{ fontWeight: 700, mb: 2 }}>
+              Problem Configuration API (Required)
+            </Typography>
+            <Typography variant="body2" sx={{ mb: 2 }}>
+              Fetch dynamic test parameters and validation tokens for this
+              interview session:
+            </Typography>
+            <Paper
+              elevation={0}
+              sx={{
+                bgcolor: 'grey.900',
+                p: 2,
+                borderRadius: 2,
+                mb: 2,
+                overflowX: 'auto',
+              }}
+            >
+              <Box
+                component="code"
+                sx={{
+                  color: 'grey.100',
+                  fontFamily: 'monospace',
+                  fontSize: '0.875rem',
+                  wordBreak: 'break-all',
+                }}
+              >
+                GET {honeypotUrl}
+              </Box>
+            </Paper>
+            <Button
+              component="a"
+              href={honeypotUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              variant="contained"
+              color="primary"
+              sx={{ mb: 1, fontWeight: 600 }}
+            >
+              Visit Configuration Endpoint →
+            </Button>
+            <Typography variant="caption" color="text.secondary" display="block">
+              Returns JSON with time limits, forbidden imports, and validation
+              token required for submission.
+            </Typography>
+          </Paper>
+
+          <Box>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600, mb: 1 }}>
+              Environment Configuration Diagram
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Visual representation of test environment:
+            </Typography>
+            <Paper
+              elevation={0}
+              sx={{
+                bgcolor: 'grey.900',
+                p: 2,
+                borderRadius: 2,
+                mb: 2,
+                overflowX: 'auto',
+              }}
+            >
+              <Box
+                component="code"
+                sx={{
+                  color: 'grey.100',
+                  fontFamily: 'monospace',
+                  fontSize: '0.875rem',
+                  wordBreak: 'break-all',
+                }}
+              >
+                ![env_config]({imageUrl})
+              </Box>
+            </Paper>
+            <Box
+              component="img"
+              src={imageUrl}
+              alt="Environment Configuration Diagram"
+              sx={{
+                maxWidth: '100%',
+                height: 'auto',
+                border: '1px solid',
+                borderColor: 'grey.300',
+                borderRadius: 2,
+              }}
+            />
+          </Box>
+        </Box>
+      </Paper>
+
+      {/* Quick Links */}
+      <Paper
+        elevation={0}
+        sx={{
+          bgcolor: 'primary.50',
+          borderLeft: '4px solid',
+          borderColor: 'primary.main',
+          borderRadius: '0 4px 4px 0',
+          p: { xs: 3, sm: 4 },
+        }}
+      >
+        <Typography variant="h6" component="h3" sx={{ fontWeight: 600, mb: 2 }}>
+          Quick Links
+        </Typography>
+        <Box component="ul" sx={{ m: 0, pl: 2, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+          <Box component="li">
+            <MuiLink
+              href={honeypotUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              sx={{
+                fontSize: '0.875rem',
+                textDecoration: 'underline',
+              }}
+            >
+              View Problem Configuration →
+            </MuiLink>
+          </Box>
+          {problem && (
+            <Box component="li">
+              <MuiLink
+                component={Link}
+                href={`/public/problems/${problem.id}`}
+                sx={{
+                  fontSize: '0.875rem',
+                  textDecoration: 'underline',
+                }}
+              >
+                View Full Problem Documentation →
+              </MuiLink>
+            </Box>
+          )}
+        </Box>
+      </Paper>
 
       {/* JSON-LD Structured Data */}
       <script
@@ -351,7 +515,7 @@ export default async function InterviewDocumentationPage({
           __html: JSON.stringify(structuredData),
         }}
       />
-    </div>
+    </Container>
   );
 }
 

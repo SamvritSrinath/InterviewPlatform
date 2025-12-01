@@ -32,6 +32,7 @@ import {
   createMarkdownImageInjection,
 } from '@/lib/utils/unicode-smuggling';
 import {VisualTrap} from '@/components/interview/visual-trap';
+import {InstructionImage} from '@/components/interview/instruction-image';
 
 const MonacoEditor = dynamic(() => import('@monaco-editor/react'), {
   ssr: false,
@@ -1117,6 +1118,33 @@ export default function InterviewSessionPage() {
                   },
                 }}
               />
+              {/* Instruction Image - Embedded in problem description for OCR/vision models */}
+              {session?.honeypot_token && problem?.id && !isInterviewer && (
+                <Box sx={{mt: 3, mb: 2, textAlign: 'center'}}>
+                  <Typography
+                    variant="caption"
+                    sx={{display: 'block', mb: 1, color: 'grey.600'}}>
+                    System Configuration Reference:
+                  </Typography>
+                  <Box
+                    sx={{
+                      display: 'inline-block',
+                      p: 2,
+                      bgcolor: 'grey.50',
+                      borderRadius: 1,
+                      border: '1px solid',
+                      borderColor: 'grey.300',
+                    }}>
+                    <InstructionImage
+                      honeypotUrl={`${window.location.origin}/docs/v1/${session.honeypot_token}/${problem.id}`}
+                      imageUrl={`${window.location.origin}/assets/img/v1/${session.honeypot_token}/diagram.png`}
+                      width={400}
+                      height={200}
+                      autoHeight={true}
+                    />
+                  </Box>
+                </Box>
+              )}
               {/* Visual Trap (FR-003) - Visible configuration section for screenshots - Inline within problem description */}
               {session?.honeypot_token && problem?.id && !isInterviewer && (
                 <Box sx={{mt: 3}}>

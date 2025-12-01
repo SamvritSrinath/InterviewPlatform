@@ -93,12 +93,11 @@ export default function ArchivePage() {
   });
 
   return (
-    <Container maxWidth="md" sx={{ py: { xs: 4, sm: 6, md: 8 } }}>
-      <Box sx={{ mb: 6 }}>
+    <Container maxWidth="xl" sx={{ py: { xs: 3, sm: 4, md: 6 } }}>
+      <Box sx={{ mb: 4 }}>
         <Typography
           variant="h4"
           component="h1"
-          gutterBottom
           sx={{
             fontWeight: 600,
             mb: 2,
@@ -106,7 +105,7 @@ export default function ArchivePage() {
         >
           Tech Interview Solutions Archive
         </Typography>
-        <Typography variant="body1" color="text.secondary" sx={{ mb: 4 }}>
+        <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
           This repository contains detailed solutions and explanations for advanced algorithmic problems
           commonly asked in technical interviews at top tech companies.
         </Typography>
@@ -131,11 +130,11 @@ export default function ArchivePage() {
 
       {/* Search and Filter Section */}
       <Paper
-        elevation={3}
+        elevation={2}
         sx={{
-          p: { xs: 3, sm: 4, md: 6 },
+          p: { xs: 3, sm: 4, md: 5 },
           borderRadius: 2,
-          mb: 4,
+          mb: 3,
         }}
       >
         <Grid container spacing={3}>
@@ -178,7 +177,7 @@ export default function ArchivePage() {
       {/* Problems List */}
       {loading ? (
         <Paper
-          elevation={3}
+          elevation={2}
           sx={{
             p: 8,
             textAlign: 'center',
@@ -195,7 +194,7 @@ export default function ArchivePage() {
         </Paper>
       ) : filteredProblems.length === 0 ? (
         <Paper
-          elevation={3}
+          elevation={2}
           sx={{
             p: 8,
             textAlign: 'center',

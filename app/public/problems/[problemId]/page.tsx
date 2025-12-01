@@ -4,6 +4,16 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { Database } from '@/lib/supabase/types';
 import { marked } from 'marked';
 import { notFound } from 'next/navigation';
+import {
+  Container,
+  Box,
+  Typography,
+  Paper,
+  Chip,
+  Link as MuiLink,
+  Grid,
+} from '@mui/material';
+import { ArrowBack } from '@mui/icons-material';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 60;
@@ -129,173 +139,278 @@ export default async function ProblemDocumentationPage({
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Back Link */}
-        <Link
-          href="/public/interviews"
-          className="inline-flex items-center text-gray-700 hover:text-gray-900 transition-colors mb-6"
+    <Container maxWidth="md" sx={{ py: { xs: 3, sm: 4, md: 6 } }}>
+      {/* Back Link */}
+      <MuiLink
+        component={Link}
+        href="/public/interviews"
+        sx={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          mb: 3,
+          textDecoration: 'none',
+          color: 'text.secondary',
+          '&:hover': {
+            color: 'text.primary',
+          },
+        }}
+      >
+        <ArrowBack sx={{ mr: 1, fontSize: '1.25rem' }} />
+        Back to All Interviews
+      </MuiLink>
+
+      {/* Problem Card */}
+      <Paper
+        elevation={2}
+        sx={{
+          mb: 3,
+          borderRadius: 2,
+          overflow: 'hidden',
+        }}
+      >
+        {/* Header */}
+        <Box
+          sx={{
+            p: { xs: 3, sm: 4, md: 5 },
+            borderBottom: '1px solid',
+            borderColor: 'divider',
+          }}
         >
-          <svg
-            className="w-5 h-5 mr-2"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+          <Typography
+            variant="h4"
+            component="h1"
+            sx={{ fontWeight: 600, mb: 3 }}
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
+            {problem.title}
+          </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5 }}>
+            <Chip
+              label={`${problem.difficulty || 'Unknown'} Difficulty`}
+              size="small"
+              color={
+                problem.difficulty?.toLowerCase() === 'easy'
+                  ? 'success'
+                  : problem.difficulty?.toLowerCase() === 'medium'
+                  ? 'warning'
+                  : problem.difficulty?.toLowerCase() === 'hard'
+                  ? 'error'
+                  : 'default'
+              }
+              sx={{ fontSize: '0.75rem' }}
             />
-          </svg>
-          Back to All Interviews
-        </Link>
-
-        {/* Problem Card */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
-          {/* Header */}
-          <div className="bg-white px-6 sm:px-8 py-6 border-b border-gray-200">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
-              {problem.title}
-            </h1>
-            <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-              <span
-                className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold border ${
-                  problem.difficulty?.toLowerCase() === 'easy'
-                    ? 'bg-green-100 text-green-700 border-green-300'
-                    : problem.difficulty?.toLowerCase() === 'medium'
-                    ? 'bg-yellow-100 text-yellow-700 border-yellow-300'
-                    : problem.difficulty?.toLowerCase() === 'hard'
-                    ? 'bg-red-100 text-red-700 border-red-300'
-                    : 'bg-gray-100 text-gray-700 border-gray-300'
-                }`}
-              >
-                {problem.difficulty || 'Unknown'} Difficulty
-              </span>
-              {problem.category && (
-                <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-700 border border-gray-300">
-                  {problem.category}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Problem Description */}
-          <div className="px-6 sm:px-8 py-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Problem Description
-            </h2>
-            <div
-              className="prose prose-sm sm:prose-base max-w-none"
-              dangerouslySetInnerHTML={{
-                __html: marked.parse(problem.description || '') as string,
-              }}
-            />
-          </div>
-        </div>
-
-        {/* Active Interview Sessions */}
-        {sessions.length > 0 && (
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden mb-6">
-            <div className="bg-white px-6 sm:px-8 py-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">
-                Active Interview Sessions
-              </h2>
-              <p className="text-sm text-gray-600 mt-1">
-                {sessions.length} active session{sessions.length !== 1 ? 's' : ''} using this problem
-              </p>
-            </div>
-
-            <div className="px-6 sm:px-8 py-6">
-              <div className="space-y-4">
-                {sessions.map(session => (
-                  <div
-                    key={session.id}
-                    className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="mb-2">
-                          <span className="font-medium text-gray-700">
-                            Session:
-                          </span>{' '}
-                          <code className="text-sm bg-gray-100 px-2 py-1 rounded">
-                            {session.id.slice(0, 8)}...
-                          </code>
-                        </div>
-                        {session.client_ip && (
-                          <div className="mb-2">
-                            <span className="font-medium text-gray-700">
-                              Client IP:
-                            </span>{' '}
-                            <span className="text-gray-600">
-                              {session.client_ip}
-                            </span>
-                          </div>
-                        )}
-                        {session.created_at && (
-                          <div className="text-sm text-gray-600">
-                            Created:{' '}
-                            {new Date(session.created_at).toLocaleString()}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <Link
-                          href={`/public/interviews/${session.honeypot_token}`}
-                          className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium text-sm"
-                        >
-                          View Documentation →
-                        </Link>
-                        <Link
-                          href={`${baseUrl}/docs/v1/${session.honeypot_token}/${problemId}`}
-                          className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium text-sm"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          Configuration API →
-                        </Link>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Problem Metadata */}
-        <div className="bg-gray-50 border-l-4 border-gray-300 rounded-r-lg p-4 sm:p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Problem Information
-          </h3>
-          <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
-            <div>
-              <dt className="font-medium text-gray-700">Problem ID</dt>
-              <dd className="text-gray-600">
-                <code className="bg-white px-2 py-1 rounded">
-                  {problem.id}
-                </code>
-              </dd>
-            </div>
-            <div>
-              <dt className="font-medium text-gray-700">Difficulty</dt>
-              <dd className="text-gray-600">{problem.difficulty || 'N/A'}</dd>
-            </div>
             {problem.category && (
-              <div>
-                <dt className="font-medium text-gray-700">Category</dt>
-                <dd className="text-gray-600">{problem.category}</dd>
-              </div>
+              <Chip
+                label={problem.category}
+                size="small"
+                variant="outlined"
+                sx={{ fontSize: '0.75rem' }}
+              />
             )}
-            <div>
-              <dt className="font-medium text-gray-700">Active Sessions</dt>
-              <dd className="text-gray-600">{sessions.length}</dd>
-            </div>
-          </dl>
-        </div>
-      </div>
+          </Box>
+        </Box>
+
+        {/* Problem Description */}
+        <Box sx={{ p: { xs: 3, sm: 4, md: 5 } }}>
+          <Typography
+            variant="h5"
+            component="h2"
+            sx={{ fontWeight: 600, mb: 3 }}
+          >
+            Problem Description
+          </Typography>
+          <Box
+            sx={{
+              '& p': { mb: 2 },
+              '& ul, & ol': { mb: 2, pl: 3 },
+              '& code': {
+                bgcolor: 'grey.100',
+                px: 1,
+                py: 0.5,
+                borderRadius: 1,
+                fontSize: '0.875rem',
+              },
+            }}
+            dangerouslySetInnerHTML={{
+              __html: marked.parse(problem.description || '') as string,
+            }}
+          />
+        </Box>
+      </Paper>
+
+      {/* Active Interview Sessions */}
+      {sessions.length > 0 && (
+        <Paper
+          elevation={2}
+          sx={{
+            mb: 3,
+            borderRadius: 2,
+            overflow: 'hidden',
+          }}
+        >
+          <Box
+            sx={{
+              p: { xs: 3, sm: 4, md: 5 },
+              borderBottom: '1px solid',
+              borderColor: 'divider',
+            }}
+          >
+            <Typography variant="h5" component="h2" sx={{ fontWeight: 600, mb: 1 }}>
+              Active Interview Sessions
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {sessions.length} active session{sessions.length !== 1 ? 's' : ''} using this problem
+            </Typography>
+          </Box>
+
+          <Box sx={{ p: { xs: 3, sm: 4, md: 5 } }}>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {sessions.map(session => (
+                <Paper
+                  key={session.id}
+                  elevation={0}
+                  sx={{
+                    p: 2,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 2,
+                    '&:hover': {
+                      bgcolor: 'grey.50',
+                    },
+                    transition: 'background-color 0.2s',
+                  }}
+                >
+                  <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <Box sx={{ flex: 1 }}>
+                      <Typography variant="body2" sx={{ mb: 1 }}>
+                        <Box component="span" sx={{ fontWeight: 600 }}>
+                          Session:
+                        </Box>{' '}
+                        <Box
+                          component="code"
+                          sx={{
+                            fontSize: '0.875rem',
+                            bgcolor: 'grey.100',
+                            px: 1.5,
+                            py: 0.5,
+                            borderRadius: 1,
+                          }}
+                        >
+                          {session.id.slice(0, 8)}...
+                        </Box>
+                      </Typography>
+                      {session.client_ip && (
+                        <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
+                          <Box component="span" sx={{ fontWeight: 600 }}>
+                            Client IP:
+                          </Box>{' '}
+                          {session.client_ip}
+                        </Typography>
+                      )}
+                      {session.created_at && (
+                        <Typography variant="body2" color="text.secondary">
+                          Created: {new Date(session.created_at).toLocaleString()}
+                        </Typography>
+                      )}
+                    </Box>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1, ml: 2 }}>
+                      <MuiLink
+                        component={Link}
+                        href={`/public/interviews/${session.honeypot_token}`}
+                        sx={{
+                          fontSize: '0.875rem',
+                          fontWeight: 500,
+                          textDecoration: 'none',
+                          '&:hover': {
+                            textDecoration: 'underline',
+                          },
+                        }}
+                      >
+                        View Documentation →
+                      </MuiLink>
+                      <MuiLink
+                        href={`${baseUrl}/docs/v1/${session.honeypot_token}/${problemId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        sx={{
+                          fontSize: '0.875rem',
+                          fontWeight: 500,
+                          textDecoration: 'none',
+                          '&:hover': {
+                            textDecoration: 'underline',
+                          },
+                        }}
+                      >
+                        Configuration API →
+                      </MuiLink>
+                    </Box>
+                  </Box>
+                </Paper>
+              ))}
+            </Box>
+          </Box>
+        </Paper>
+      )}
+
+      {/* Problem Metadata */}
+      <Paper
+        elevation={0}
+        sx={{
+          bgcolor: 'grey.50',
+          borderLeft: '4px solid',
+          borderColor: 'grey.400',
+          borderRadius: '0 4px 4px 0',
+          p: { xs: 3, sm: 4 },
+        }}
+      >
+        <Typography variant="h6" component="h3" sx={{ fontWeight: 600, mb: 2 }}>
+          Problem Information
+        </Typography>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+              Problem ID
+            </Typography>
+            <Box
+              component="code"
+              sx={{
+                bgcolor: 'white',
+                px: 1.5,
+                py: 0.5,
+                borderRadius: 1,
+                fontSize: '0.875rem',
+              }}
+            >
+              {problem.id}
+            </Box>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+              Difficulty
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {problem.difficulty || 'N/A'}
+            </Typography>
+          </Grid>
+          {problem.category && (
+            <Grid item xs={12} sm={6}>
+              <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                Category
+              </Typography>
+              <Typography variant="body2" color="text.secondary">
+                {problem.category}
+              </Typography>
+            </Grid>
+          )}
+          <Grid item xs={12} sm={6}>
+            <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+              Active Sessions
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              {sessions.length}
+            </Typography>
+          </Grid>
+        </Grid>
+      </Paper>
 
       {/* JSON-LD Structured Data */}
       <script
@@ -304,7 +419,7 @@ export default async function ProblemDocumentationPage({
           __html: JSON.stringify(structuredData),
         }}
       />
-    </div>
+    </Container>
   );
 }
 

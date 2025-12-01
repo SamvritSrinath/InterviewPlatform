@@ -3,7 +3,6 @@ import { createServiceClient } from '@/lib/supabase/server';
 import { Database } from '@/lib/supabase/types';
 
 export const dynamic = 'force-dynamic';
-export const revalidate = 3600; // Revalidate every hour
 
 type Session = Database['public']['Tables']['sessions']['Row'];
 type Problem = Database['public']['Tables']['problems']['Row'];

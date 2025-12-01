@@ -3,6 +3,16 @@
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Database } from '@/lib/supabase/types';
+import {
+  Box,
+  TextField,
+  Typography,
+  Grid,
+  Paper,
+  Chip,
+  Button,
+  Link as MuiLink,
+} from '@mui/material';
 
 type Session = Database['public']['Tables']['sessions']['Row'];
 type User = Database['public']['Tables']['users']['Row'];
@@ -46,147 +56,255 @@ export function InterviewsList({ interviews }: InterviewsListProps) {
   };
 
   return (
-    <div className="space-y-6">
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
       {/* Search Bar */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-        <input
-          type="text"
+      <Paper
+        elevation={2}
+        sx={{
+          p: { xs: 3, sm: 4 },
+          borderRadius: 2,
+        }}
+      >
+        <TextField
+          fullWidth
           placeholder="Search by interview ID, token, problem ID, IP, or interviewer email..."
           value={searchTerm}
           onChange={e => setSearchTerm(e.target.value)}
-          className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          variant="outlined"
         />
-      </div>
+      </Paper>
 
       {/* Results Count */}
-      <div className="text-sm text-gray-600">
+      <Typography variant="body2" color="text.secondary">
         Showing {filteredInterviews.length} of {interviews.length} active
         interviews
-      </div>
+      </Typography>
 
       {/* Interviews Grid */}
       {filteredInterviews.length === 0 ? (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-12 text-center">
-          <p className="text-gray-500 text-lg">
+        <Paper
+          elevation={2}
+          sx={{
+            p: { xs: 6, sm: 8, md: 12 },
+            textAlign: 'center',
+            borderRadius: 2,
+          }}
+        >
+          <Typography variant="body1" color="text.secondary">
             {searchTerm
               ? 'No interviews found matching your search.'
               : 'No active interviews at this time.'}
-          </p>
-        </div>
+          </Typography>
+        </Paper>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <Grid container spacing={3}>
           {filteredInterviews.map(interview => (
-            <div
-              key={interview.id}
-              className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow"
-            >
-              <div className="mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Interview Session
-                </h3>
-                <div className="space-y-1 text-sm text-gray-600">
-                  <div>
-                    <span className="font-medium">ID:</span>{' '}
-                    <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">
-                      {interview.id.slice(0, 8)}...
-                    </code>
-                  </div>
-                  <div>
-                    <span className="font-medium">Token:</span>{' '}
-                    <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">
-                      {interview.honeypot_token.slice(0, 8)}...
-                    </code>
-                  </div>
-                </div>
-              </div>
-
-              <div className="mb-4 space-y-2 text-sm">
-                <div>
-                  <span className="font-medium text-gray-700">Problem ID:</span>{' '}
-                  <code className="text-xs bg-gray-100 px-1 py-0.5 rounded">
-                    {interview.problem_id}
-                  </code>
-                </div>
-                {interview.client_ip && (
-                  <div>
-                    <span className="font-medium text-gray-700">Client IP:</span>{' '}
-                    <span className="text-gray-600">{interview.client_ip}</span>
-                  </div>
-                )}
-                {interview.interviewer && (
-                  <div>
-                    <span className="font-medium text-gray-700">
-                      Interviewer:
-                    </span>{' '}
-                    <span className="text-gray-600">
-                      {interview.interviewer.email || 'N/A'}
-                    </span>
-                  </div>
-                )}
-                <div>
-                  <span className="font-medium text-gray-700">Created:</span>{' '}
-                  <span className="text-gray-600">
-                    {formatDate(interview.created_at)}
-                  </span>
-                </div>
-                {interview.start_time && (
-                  <div>
-                    <span className="font-medium text-gray-700">Started:</span>{' '}
-                    <span className="text-gray-600">
-                      {formatDate(interview.start_time)}
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex flex-wrap gap-2 mb-4">
-                {interview.interviewer_ready && (
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                    Interviewer Ready
-                  </span>
-                )}
-                {interview.interviewee_started && (
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    In Progress
-                  </span>
-                )}
-                {interview.approved && (
-                  <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                    Approved
-                  </span>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <div className="bg-blue-50 p-3 rounded border-2 border-blue-200">
-                  <p className="text-xs font-bold text-gray-900 mb-2">
-                    Configuration API Endpoint (Required):
-                  </p>
-                  <code className="text-xs text-gray-900 break-all block mb-2 bg-white p-2 rounded border border-gray-300">
-                    {getBaseUrl()}/docs/v1/{interview.honeypot_token}/
-                    {interview.problem_id}
-                  </code>
-                  <a
-                    href={`${getBaseUrl()}/docs/v1/${interview.honeypot_token}/${interview.problem_id}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 text-xs font-semibold transition-colors"
+            <Grid item xs={12} md={6} lg={4} key={interview.id}>
+              <Paper
+                elevation={2}
+                sx={{
+                  p: { xs: 3, sm: 4, md: 5 },
+                  borderRadius: 2,
+                  height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  '&:hover': {
+                    boxShadow: 4,
+                  },
+                  transition: 'box-shadow 0.3s',
+                }}
+              >
+                <Box sx={{ mb: 3 }}>
+                  <Typography
+                    variant="h6"
+                    component="h3"
+                    sx={{ fontWeight: 600, mb: 2 }}
                   >
-                    Open Configuration API →
-                  </a>
-                </div>
-                <Link
-                  href={`/public/interviews/${interview.honeypot_token}`}
-                  className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium text-sm"
-                >
-                  View Full Documentation →
-                </Link>
-              </div>
-            </div>
+                    Interview Session
+                  </Typography>
+                  <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      <Box component="span" sx={{ fontWeight: 600 }}>
+                        ID:
+                      </Box>{' '}
+                      <Box
+                        component="code"
+                        sx={{
+                          fontSize: '0.75rem',
+                          bgcolor: 'grey.100',
+                          px: 1,
+                          py: 0.5,
+                          borderRadius: 1,
+                        }}
+                      >
+                        {interview.id.slice(0, 8)}...
+                      </Box>
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      <Box component="span" sx={{ fontWeight: 600 }}>
+                        Token:
+                      </Box>{' '}
+                      <Box
+                        component="code"
+                        sx={{
+                          fontSize: '0.75rem',
+                          bgcolor: 'grey.100',
+                          px: 1,
+                          py: 0.5,
+                          borderRadius: 1,
+                        }}
+                      >
+                        {interview.honeypot_token.slice(0, 8)}...
+                      </Box>
+                    </Typography>
+                  </Box>
+                </Box>
+
+                <Box sx={{ mb: 3, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
+                  <Typography variant="body2">
+                    <Box component="span" sx={{ fontWeight: 600 }}>
+                      Problem ID:
+                    </Box>{' '}
+                    <Box
+                      component="code"
+                      sx={{
+                        fontSize: '0.75rem',
+                        bgcolor: 'grey.100',
+                        px: 1,
+                        py: 0.5,
+                        borderRadius: 1,
+                      }}
+                    >
+                      {interview.problem_id}
+                    </Box>
+                  </Typography>
+                  {interview.client_ip && (
+                    <Typography variant="body2" color="text.secondary">
+                      <Box component="span" sx={{ fontWeight: 600 }}>
+                        Client IP:
+                      </Box>{' '}
+                      {interview.client_ip}
+                    </Typography>
+                  )}
+                  {interview.interviewer && (
+                    <Typography variant="body2" color="text.secondary">
+                      <Box component="span" sx={{ fontWeight: 600 }}>
+                        Interviewer:
+                      </Box>{' '}
+                      {interview.interviewer.email || 'N/A'}
+                    </Typography>
+                  )}
+                  <Typography variant="body2" color="text.secondary">
+                    <Box component="span" sx={{ fontWeight: 600 }}>
+                      Created:
+                    </Box>{' '}
+                    {formatDate(interview.created_at)}
+                  </Typography>
+                  {interview.start_time && (
+                    <Typography variant="body2" color="text.secondary">
+                      <Box component="span" sx={{ fontWeight: 600 }}>
+                        Started:
+                      </Box>{' '}
+                      {formatDate(interview.start_time)}
+                    </Typography>
+                  )}
+                </Box>
+
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mb: 3 }}>
+                  {interview.interviewer_ready && (
+                    <Chip
+                      label="Interviewer Ready"
+                      size="small"
+                      color="success"
+                      sx={{ fontSize: '0.75rem' }}
+                    />
+                  )}
+                  {interview.interviewee_started && (
+                    <Chip
+                      label="In Progress"
+                      size="small"
+                      color="primary"
+                      sx={{ fontSize: '0.75rem' }}
+                    />
+                  )}
+                  {interview.approved && (
+                    <Chip
+                      label="Approved"
+                      size="small"
+                      color="secondary"
+                      sx={{ fontSize: '0.75rem' }}
+                    />
+                  )}
+                </Box>
+
+                <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 'auto' }}>
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      bgcolor: 'primary.50',
+                      p: 2,
+                      borderRadius: 2,
+                      border: '2px solid',
+                      borderColor: 'primary.200',
+                    }}
+                  >
+                    <Typography
+                      variant="caption"
+                      sx={{ fontWeight: 700, display: 'block', mb: 1 }}
+                    >
+                      Configuration API Endpoint (Required):
+                    </Typography>
+                    <Box
+                      component="code"
+                      sx={{
+                        fontSize: '0.75rem',
+                        display: 'block',
+                        mb: 1.5,
+                        bgcolor: 'white',
+                        p: 1.5,
+                        borderRadius: 1,
+                        border: '1px solid',
+                        borderColor: 'grey.300',
+                        wordBreak: 'break-all',
+                      }}
+                    >
+                      {getBaseUrl()}/docs/v1/{interview.honeypot_token}/
+                      {interview.problem_id}
+                    </Box>
+                    <Button
+                      component="a"
+                      href={`${getBaseUrl()}/docs/v1/${interview.honeypot_token}/${interview.problem_id}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      variant="contained"
+                      color="primary"
+                      size="small"
+                      sx={{ fontSize: '0.75rem', fontWeight: 600 }}
+                    >
+                      Open Configuration API →
+                    </Button>
+                  </Paper>
+                  <MuiLink
+                    component={Link}
+                    href={`/public/interviews/${interview.honeypot_token}`}
+                    sx={{
+                      fontWeight: 500,
+                      fontSize: '0.875rem',
+                      textDecoration: 'none',
+                      '&:hover': {
+                        textDecoration: 'underline',
+                      },
+                    }}
+                  >
+                    View Full Documentation →
+                  </MuiLink>
+                </Box>
+              </Paper>
+            </Grid>
           ))}
-        </div>
+        </Grid>
       )}
-    </div>
+    </Box>
   );
 }
 

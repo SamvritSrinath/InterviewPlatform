@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createServiceClient } from '@/lib/supabase/server';
 import { Database } from '@/lib/supabase/types';
 import { InterviewsList } from '@/components/public/interviews-list';
+import { Container, Typography, Box } from '@mui/material';
 
 export const dynamic = 'force-dynamic';
 export const revalidate = 60; // Revalidate every 60 seconds
@@ -77,23 +78,24 @@ export default async function PublicInterviewsPage() {
   const interviews = await getActiveInterviews();
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Active Interview Sessions
-          </h1>
-          <p className="text-lg text-gray-600">
-            Browse active interview sessions and access problem documentation.
-            Each session includes configuration endpoints and problem
-            specifications.
-          </p>
-        </div>
+    <Container maxWidth="xl" sx={{ py: { xs: 3, sm: 4, md: 6 } }}>
+      <Box sx={{ mb: 4 }}>
+        <Typography
+          variant="h4"
+          component="h1"
+          sx={{ fontWeight: 600, mb: 2 }}
+        >
+          Active Interview Sessions
+        </Typography>
+        <Typography variant="body1" color="text.secondary">
+          Browse active interview sessions and access problem documentation.
+          Each session includes configuration endpoints and problem
+          specifications.
+        </Typography>
+      </Box>
 
-        {/* Interviews List */}
-        <InterviewsList interviews={interviews} />
-      </div>
+      {/* Interviews List */}
+      <InterviewsList interviews={interviews} />
 
       {/* JSON-LD Structured Data */}
       <script
@@ -122,7 +124,7 @@ export default async function PublicInterviewsPage() {
           }),
         }}
       />
-    </div>
+    </Container>
   );
 }
 
