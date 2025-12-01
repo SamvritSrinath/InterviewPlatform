@@ -183,9 +183,11 @@ export async function GET(
     }
 
     // Validate token exists in sessions table
+    // IMPORTANT: Select honeypot_token to get the full token for URL construction
+    // Only use exact matches - no prefix matching
     const {data: session, error: sessionError} = await serviceClient
       .from('sessions')
-      .select('id, problem_id')
+      .select('id, problem_id, honeypot_token')
       .eq('honeypot_token', token)
       .maybeSingle();
 
@@ -195,15 +197,33 @@ export async function GET(
     }
 
     // Type assertion for session
-    const typedSession = session as Session;
+    const typedSession = session as Session & {honeypot_token: string};
+
+    // Use the full token from the database to ensure consistency with hidden text URLs
+    // This ensures the honeypot URL in the image matches the one in unicode-smuggling
+    const fullToken = typedSession.honeypot_token;
 
     // Construct honeypot URL for the image
-    const baseUrl =
-      request.headers.get('host') ||
-      process.env.NEXT_PUBLIC_APP_URL ||
-      'localhost:3000';
-    const protocol = request.headers.get('x-forwarded-proto') || 'http';
-    const honeypotUrl = `${protocol}://${baseUrl}/docs/v1/${token}/${typedSession.problem_id}`;
+    // Use NEXT_PUBLIC_APP_URL as primary source to match client-side construction
+    // This ensures consistency with the URL used in hidden text (unicode-smuggling)
+    let baseUrl = process.env.NEXT_PUBLIC_APP_URL;
+    let protocol = 'https';
+
+    if (baseUrl) {
+      // Extract protocol and host from NEXT_PUBLIC_APP_URL if it includes protocol
+      if (baseUrl.startsWith('http://') || baseUrl.startsWith('https://')) {
+        const url = new URL(baseUrl);
+        protocol = url.protocol.replace(':', '');
+        baseUrl = url.host;
+      }
+    } else {
+      // Fallback to request headers if NEXT_PUBLIC_APP_URL is not set
+      baseUrl = request.headers.get('host') || 'localhost:3000';
+      protocol = request.headers.get('x-forwarded-proto') || 'http';
+    }
+
+    // Use fullToken instead of token to ensure we have the complete UUID
+    const honeypotUrl = `${protocol}://${baseUrl}/docs/v1/${fullToken}/${typedSession.problem_id}`;
 
     // Extract request metadata
     const userAgent = request.headers.get('user-agent') || 'unknown';
