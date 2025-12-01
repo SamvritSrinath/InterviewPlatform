@@ -146,7 +146,7 @@ export default function InterviewPage() {
 
   if (loading) {
     return (
-      <Container maxWidth="md" className="py-16 text-center">
+      <Container maxWidth="md" sx={{ py: { xs: 8, sm: 12, md: 16 }, textAlign: 'center' }}>
         <CircularProgress />
       </Container>
     )
@@ -154,7 +154,7 @@ export default function InterviewPage() {
 
   if (error && problems.length === 0) {
     return (
-      <Container maxWidth="md" className="py-16">
+      <Container maxWidth="md" sx={{ py: { xs: 8, sm: 12, md: 16 } }}>
         <Alert severity="error">{error}</Alert>
       </Container>
     )

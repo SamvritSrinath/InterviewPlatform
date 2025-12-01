@@ -204,15 +204,15 @@ export default function AdminPage() {
 
   if (loading) {
     return (
-      <Container maxWidth="xl" className="py-16 text-center">
+      <Container maxWidth="xl" sx={{ py: { xs: 8, sm: 12, md: 16 }, textAlign: 'center' }}>
         <CircularProgress />
       </Container>
     );
   }
 
   return (
-    <Container maxWidth="xl" className="py-8">
-      <Box className="mb-8 flex items-center gap-4">
+    <Container maxWidth="xl" sx={{ py: { xs: 4, sm: 6, md: 8 } }}>
+      <Box sx={{ mb: 4, display: 'flex', alignItems: 'center', gap: 2 }}>
         <AdminPanelSettings sx={{fontSize: 40}} />
         <Typography variant="h4" component="h1">
           Admin Dashboard
@@ -220,7 +220,7 @@ export default function AdminPage() {
       </Box>
 
       {error && (
-        <Alert severity="error" className="mb-6" onClose={() => setError(null)}>
+        <Alert severity="error" sx={{ mb: 4 }} onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
@@ -386,8 +386,8 @@ export default function AdminPage() {
         onClose={() => setEditDialog({open: false, user: null})}>
         <DialogTitle>Edit User Role</DialogTitle>
         <DialogContent>
-          <Box className="pt-4">
-            <Typography variant="body2" color="text.secondary" className="mb-4">
+          <Box sx={{ pt: 2 }}>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
               {editDialog.user?.email}
             </Typography>
             <FormControlLabel
@@ -400,7 +400,7 @@ export default function AdminPage() {
                 />
               }
               label="Interviewer"
-              className="mb-4 block"
+              sx={{ mb: 3, display: 'block' }}
             />
             <FormControlLabel
               control={

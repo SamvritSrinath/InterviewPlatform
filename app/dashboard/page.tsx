@@ -158,19 +158,19 @@ export default function DashboardPage() {
   }
 
   return (
-    <Container maxWidth="xl" className="py-8">
+    <Container maxWidth="xl" sx={{ py: { xs: 4, sm: 6, md: 8 } }}>
       <Typography variant="h4" component="h1" gutterBottom>
         Interviewer Dashboard
       </Typography>
 
       {error && (
-        <Alert severity="error" className="mb-6" onClose={() => setError(null)}>
+        <Alert severity="error" sx={{ mb: 4 }} onClose={() => setError(null)}>
           {error}
         </Alert>
       )}
 
       {loading ? (
-        <Box className="text-center py-8">
+        <Box sx={{ textAlign: 'center', py: 8 }}>
           <CircularProgress />
         </Box>
       ) : (
@@ -281,7 +281,7 @@ export default function DashboardPage() {
         <Alert
           onClose={() => setNotification(null)}
           severity={notification?.severity || 'info'}
-          className="w-full"
+          sx={{ width: '100%' }}
         >
           {notification?.message}
         </Alert>

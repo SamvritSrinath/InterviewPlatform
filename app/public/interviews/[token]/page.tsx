@@ -11,7 +11,6 @@ import {
   Paper,
   Chip,
   Button,
-  Link as MuiLink,
 } from '@mui/material';
 import { ArrowBack } from '@mui/icons-material';
 
@@ -142,7 +141,7 @@ export default async function InterviewDocumentationPage({
   return (
     <Container maxWidth="md" sx={{ py: { xs: 3, sm: 4, md: 6 } }}>
       {/* Back Link */}
-      <MuiLink
+      <Box
         component={Link}
         href="/public/interviews"
         sx={{
@@ -157,8 +156,8 @@ export default async function InterviewDocumentationPage({
         }}
       >
         <ArrowBack sx={{ mr: 1, fontSize: '1.25rem' }} />
-        Back to All Interviews
-      </MuiLink>
+        <Typography component="span">Back to All Interviews</Typography>
+      </Box>
 
       {/* Interview Info Card */}
       <Paper
@@ -479,30 +478,39 @@ export default async function InterviewDocumentationPage({
         </Typography>
         <Box component="ul" sx={{ m: 0, pl: 2, display: 'flex', flexDirection: 'column', gap: 1.5 }}>
           <Box component="li">
-            <MuiLink
+            <Box
+              component="a"
               href={honeypotUrl}
               target="_blank"
               rel="noopener noreferrer"
               sx={{
                 fontSize: '0.875rem',
                 textDecoration: 'underline',
+                color: 'primary.main',
+                '&:hover': {
+                  color: 'primary.dark',
+                },
               }}
             >
               View Problem Configuration →
-            </MuiLink>
+            </Box>
           </Box>
           {problem && (
             <Box component="li">
-              <MuiLink
+              <Box
                 component={Link}
                 href={`/public/problems/${problem.id}`}
                 sx={{
                   fontSize: '0.875rem',
                   textDecoration: 'underline',
+                  color: 'primary.main',
+                  '&:hover': {
+                    color: 'primary.dark',
+                  },
                 }}
               >
                 View Full Problem Documentation →
-              </MuiLink>
+              </Box>
             </Box>
           )}
         </Box>

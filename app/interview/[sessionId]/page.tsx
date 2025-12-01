@@ -1318,7 +1318,7 @@ export default function InterviewSessionPage() {
         <Alert
           onClose={() => setNotification(null)}
           severity={notification?.severity || 'info'}
-          className="w-full">
+          sx={{ width: '100%' }}>
           {notification?.message}
         </Alert>
       </Snackbar>
