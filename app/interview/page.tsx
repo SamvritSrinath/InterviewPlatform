@@ -67,7 +67,9 @@ export default function InterviewPage() {
     const sampleText = selectedProblem.description || 'Sample problem description text that would be copied by the interviewee.'
     
     // Convert watermark config to proper type
-    const watermarkConfigTyped: WatermarkConfig | null = Object.keys(watermarkConfig).length > 0 ? {
+    // Only create config if there are actual presets or custom text
+    const hasWatermarkContent = (watermarkConfig.presets && watermarkConfig.presets.length > 0) || (watermarkConfig.customText && watermarkConfig.customText.trim().length > 0)
+    const watermarkConfigTyped: WatermarkConfig | null = hasWatermarkContent ? {
       presets: watermarkConfig.presets,
       customText: watermarkConfig.customText,
     } : null
@@ -433,15 +435,22 @@ export default function InterviewPage() {
                         onChange={(e) => {
                           const currentPresets = watermarkConfig.presets || []
                           if (e.target.checked) {
+                            const newPresets = [...currentPresets, presetId]
                             setWatermarkConfig({
                               ...watermarkConfig,
-                              presets: [...currentPresets, presetId],
+                              presets: newPresets,
                             })
                           } else {
-                            setWatermarkConfig({
-                              ...watermarkConfig,
-                              presets: currentPresets.filter(p => p !== presetId),
-                            })
+                            const newPresets = currentPresets.filter(p => p !== presetId)
+                            // Clean up empty arrays - remove presets key if array is empty
+                            if (newPresets.length === 0 && !watermarkConfig.customText) {
+                              setWatermarkConfig({})
+                            } else {
+                              setWatermarkConfig({
+                                ...watermarkConfig,
+                                presets: newPresets.length > 0 ? newPresets : undefined,
+                              })
+                            }
                           }
                         }}
                       />

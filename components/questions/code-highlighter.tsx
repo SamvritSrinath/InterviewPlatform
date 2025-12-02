@@ -26,3 +26,4 @@ export function CodeHighlighter({ code, language = 'python' }: CodeHighlighterPr
   );
 }
 
+

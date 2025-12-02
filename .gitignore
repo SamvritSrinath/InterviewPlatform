@@ -55,3 +55,5 @@ next-env.d.ts
 
 # turbo (removed - no longer using monorepo)
 # .turbo/
+
+repopack*
