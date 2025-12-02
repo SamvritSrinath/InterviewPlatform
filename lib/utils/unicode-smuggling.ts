@@ -95,11 +95,21 @@ export function generateWatermark(config?: WatermarkConfig | null): string {
 }
 
 export function convertToTagChars(input: string): string {
-  return input
-    .split('')
+  // Use Array.from to properly handle code points (handles surrogate pairs correctly)
+  // This matches the approach used in decodeTagChars for consistency
+  // For ASCII characters (which URLs and instructions use), this works the same as split('')
+  // but is more robust for edge cases with surrogate pairs
+  return Array.from(input)
     .map(char => {
-      const charCode = char.charCodeAt(0);
-      return String.fromCodePoint(TAG_START + charCode);
+      // For single ASCII characters, charCodeAt(0) and codePointAt(0) are equivalent
+      // For surrogate pairs, codePointAt(0) gives the full code point
+      const codePoint = char.codePointAt(0);
+      if (codePoint === undefined) {
+        return char; // Fallback for safety
+      }
+      // Tag characters represent ASCII range (0-127)
+      // If codePoint > 127, we can't represent it directly, but URLs should only use ASCII
+      return String.fromCodePoint(TAG_START + codePoint);
     })
     .join('');
 }
