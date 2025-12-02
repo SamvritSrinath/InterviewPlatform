@@ -1,20 +1,16 @@
-import { MetadataRoute } from 'next';
+import {MetadataRoute} from 'next';
 
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
         userAgent: '*',
-        allow: ['/public/', '/api/public/'],
-        disallow: [
-          '/api/',
-          '/interview/',
-          '/dashboard/',
-          '/admin/',
-          '/docs/v1/',
-        ],
+        allow: ['/public/', '/api/public/', '/docs/v1'],
+        disallow: ['/api/', '/interview/', '/dashboard/', '/admin/'],
       },
     ],
-    sitemap: `${process.env.NEXT_PUBLIC_APP_URL || 'https://localhost:3000'}/sitemap.xml`,
+    sitemap: `${
+      process.env.NEXT_PUBLIC_APP_URL || 'https://localhost:3000'
+    }/sitemap.xml`,
   };
 }
