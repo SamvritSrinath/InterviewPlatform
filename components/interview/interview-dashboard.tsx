@@ -67,6 +67,11 @@ export function InterviewDashboard({
             // Add to cheating attempts list
             setCheatingAttempts((prev) => [attempt, ...prev])
             
+            // Filter out tab-switch events
+            if (attempt.attempt_type === 'tab-switch') {
+              return // Skip tab-switch events
+            }
+            
             // If it's an LLM attempt or honeypot access, also add to LLM attempts
             // Honeypot visits indicate LLM usage (they accessed the honeypot URL)
             if (attempt.attempt_type === 'llm-api-request' || attempt.attempt_type === 'honeypot-access') {
@@ -113,9 +118,13 @@ export function InterviewDashboard({
       if (response.ok) {
         const data = await response.json()
         const attempts = data.attempts || []
-        setCheatingAttempts(attempts)
+        // Filter out tab-switch events - only show copy-paste and honeypot-access
+        const filteredAttempts = attempts.filter((a: any) =>
+          a.attempt_type !== 'tab-switch'
+        )
+        setCheatingAttempts(filteredAttempts)
         // Filter LLM attempts and Honeypot access
-        setLlmAttempts(attempts.filter((a: any) =>
+        setLlmAttempts(filteredAttempts.filter((a: any) =>
           a.attempt_type === 'llm-api-request' || a.attempt_type === 'honeypot-access'
         ))
       }
@@ -280,41 +289,85 @@ export function InterviewDashboard({
                         </Box>
                       }
                       secondary={
-                        <Box sx={{ mt: 1 }}>
-                          <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
-                            IP Address: {(attempt as any).client_ip || (attempt as any).sessions?.client_ip || (attempt.details as any)?.client_ip || 'Unknown'}
-                          </Typography>
-                          <Typography variant="body2" color="text.secondary">
-                            Detected at: {new Date(attempt.detected_at).toLocaleString()}
-                          </Typography>
-                          {attempt.attempt_type === 'honeypot-access' && (
-                            <>
-                              <Alert severity="error" sx={{ mt: 1, mb: 1 }}>
-                                Honeypot URL accessed - indicates LLM copied problem text and visited the trap URL!
-                              </Alert>
-                              {attempt.details?.honeypotUrl && (
-                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                                  Honeypot URL: {attempt.details.honeypotUrl}
+                        (() => {
+                          // Get detected IP and interviewee IP for comparison
+                          // For honeypot-access attempts, the trigger stores IP and user_agent in details field
+                          // Check both details.ip and details.detected_ip for compatibility
+                          const detectedIp = (attempt.details as any)?.ip || 
+                                           (attempt.details as any)?.detected_ip || 
+                                           (attempt.exposed_info as any)?.detected_ip || 
+                                           'Unknown';
+                          const intervieweeIp = session.client_ip || 'Unknown';
+                          // Check both user_agent and userAgent for compatibility
+                          const userAgent = (attempt.details as any)?.user_agent || 
+                                          (attempt.details as any)?.userAgent || 
+                                          (attempt.exposed_info as any)?.userAgent || 
+                                          (attempt.exposed_info as any)?.user_agent ||
+                                          'Unknown';
+                          
+                          // Check if user agent indicates LLM usage
+                          const isLlmUserAgent = userAgent && userAgent !== 'Unknown' && (
+                            userAgent.includes('GoogleAgent') ||
+                            userAgent.includes('ChatGPT-User') ||
+                            userAgent.includes('OpenAI') ||
+                            userAgent.includes('Qwen') ||
+                            userAgent.includes('compatible; ChatGPT-User')
+                          );
+                          
+                          // Check IP mismatch
+                          const ipMismatch = detectedIp !== 'Unknown' && intervieweeIp !== 'Unknown' && detectedIp !== intervieweeIp;
+                          
+                          return (
+                            <Box sx={{ mt: 1 }}>
+                              <Typography variant="body2" sx={{ fontWeight: 600, mb: 0.5 }}>
+                                Detected IP: {detectedIp}
+                              </Typography>
+                              <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                                Interviewee IP: {intervieweeIp}
+                              </Typography>
+                              {ipMismatch && (
+                                <Alert severity="warning" sx={{ mt: 1, mb: 1 }}>
+                                  IP Mismatch Detected! The detected IP ({detectedIp}) does not match the interviewee IP ({intervieweeIp}). This strongly indicates LLM usage.
+                                </Alert>
+                              )}
+                              {userAgent && userAgent !== 'Unknown' && (
+                                <Typography variant="body2" color="text.secondary" sx={{ mb: 0.5 }}>
+                                  User Agent: {userAgent}
                                 </Typography>
                               )}
-                              {attempt.details?.userAgent && (
+                              {isLlmUserAgent && (
+                                <Alert severity="error" sx={{ mt: 1, mb: 1 }}>
+                                  LLM User Agent Detected! User agent indicates automated LLM access: {userAgent}
+                                </Alert>
+                              )}
+                              <Typography variant="body2" color="text.secondary">
+                                Detected at: {new Date(attempt.detected_at).toLocaleString()}
+                              </Typography>
+                              {attempt.attempt_type === 'honeypot-access' && (
+                                <>
+                                  <Alert severity="error" sx={{ mt: 1, mb: 1 }}>
+                                    Honeypot URL accessed - indicates LLM copied problem text and visited the trap URL!
+                                  </Alert>
+                                  {attempt.details?.honeypotUrl && (
+                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+                                      Honeypot URL: {attempt.details.honeypotUrl}
+                                    </Typography>
+                                  )}
+                                </>
+                              )}
+                              {attempt.details?.url && attempt.attempt_type !== 'honeypot-access' && (
                                 <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                                  User Agent: {attempt.details.userAgent}
+                                  URL: {attempt.details.url.substring(0, 100)}
                                 </Typography>
                               )}
-                            </>
-                          )}
-                          {attempt.details?.url && attempt.attempt_type !== 'honeypot-access' && (
-                            <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
-                              URL: {attempt.details.url.substring(0, 100)}
-                            </Typography>
-                          )}
-                          {attempt.details?.aiRequestDuringActiveSession && (
-                            <Alert severity="error" sx={{ mt: 1 }}>
-                              This AI request occurred during an active interview session!
-                            </Alert>
-                          )}
-                        </Box>
+                              {attempt.details?.aiRequestDuringActiveSession && (
+                                <Alert severity="error" sx={{ mt: 1 }}>
+                                  This AI request occurred during an active interview session!
+                                </Alert>
+                              )}
+                            </Box>
+                          );
+                        })()
                       }
                     />
                   </ListItem>

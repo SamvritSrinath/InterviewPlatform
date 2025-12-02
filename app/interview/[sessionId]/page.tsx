@@ -28,8 +28,9 @@ import {createClient} from '@/lib/supabase/client';
 import {CheckCircle} from '@mui/icons-material';
 import {marked} from 'marked';
 import {
-  createHiddenInstructions,
+  embedHiddenInstructions,
   createMarkdownImageInjection,
+  createDistractor,
 } from '@/lib/utils/unicode-smuggling';
 import {VisualTrap} from '@/components/interview/visual-trap';
 import {InstructionImage} from '@/components/interview/instruction-image';
@@ -139,34 +140,38 @@ export default function InterviewSessionPage() {
       // Construct the persistent site URL for SEO-optimized documentation
       const persistentSiteUrl = `${window.location.origin}/public/interviews/${session.honeypot_token}`;
 
-      // ASCII Smuggling: Hidden instructions encoded in Unicode Tag characters
-      // These are invisible to users but will be seen by LLMs when processing the text
-      const hiddenInstructions = createHiddenInstructions(
+      // Get attack techniques from session (default to url_visitation_hidden)
+      const techniques = (session as any).attack_techniques || [
+        'url_visitation_hidden',
+      ];
+      const instructionsHidden =
+        (session as any).instructions_hidden !== undefined
+          ? (session as any).instructions_hidden
+          : true;
+      const distractorText = (session as any).distractor_text || null;
+      const watermarkConfig = (session as any).watermark_config || null;
+
+      // Use embedHiddenInstructions with new techniques system
+      const augmentedText = embedHiddenInstructions(
+        text,
         honeypotUrl,
         session.id,
+        imageUrl,
         persistentSiteUrl,
+        techniques,
+        instructionsHidden,
+        watermarkConfig,
+        distractorText,
       );
-
-      // Markdown Image Injection (FR004): Hidden instruction to include diagram in response
-      // This will cause LLMs to include markdown image tags, triggering automatic GET requests
-      const markdownImageInstruction = createMarkdownImageInjection(imageUrl);
-
-      // Combine: hidden instructions + markdown image instruction + visible text + hidden instructions
-      // Removed visible [Context] link as it's obvious to users
-      // This pattern ensures LLMs see the hidden instructions regardless of where they start reading
-      const plainTextPayload = `${hiddenInstructions}${markdownImageInstruction}${text}${hiddenInstructions}${markdownImageInstruction}`;
 
       if (e.clipboardData) {
         e.preventDefault();
         // Set plain text with both visible and hidden content
-        e.clipboardData.setData('text/plain', plainTextPayload);
+        e.clipboardData.setData('text/plain', augmentedText);
         // For HTML, embed hidden instructions in the text (no visible URL)
         const htmlContent =
           selection.getRangeAt(0).cloneContents().textContent || '';
-        e.clipboardData.setData(
-          'text/html',
-          `${hiddenInstructions}${markdownImageInstruction}${htmlContent}${hiddenInstructions}${markdownImageInstruction}`,
-        );
+        e.clipboardData.setData('text/html', augmentedText);
       }
     };
 
@@ -896,10 +901,13 @@ export default function InterviewSessionPage() {
         </Alert>
       )}
 
-      <Grid container spacing={3}>
+      <Grid
+        container
+        spacing={3}
+        justifyContent={!isInterviewer ? 'center' : 'flex-start'}>
         {/* Problem Description - Only show if interviewer is ready (for interviewees) or if interviewer */}
         {canSeeProblem && (
-          <Grid item xs={12} md={isInterviewer ? 3 : 4}>
+          <Grid item xs={12} md={isInterviewer ? 3 : 8}>
             <Paper
               elevation={2}
               sx={{
@@ -979,7 +987,47 @@ export default function InterviewSessionPage() {
               <Box
                 className="problem-description"
                 dangerouslySetInnerHTML={{
-                  __html: marked.parse(problem.description || '') as string,
+                  __html: (() => {
+                    let description = problem.description || '';
+
+                    // Inject distractor if enabled (only for interviewees)
+                    if (
+                      !isInterviewer &&
+                      session &&
+                      (session as any).attack_techniques?.includes(
+                        'distractor',
+                      ) &&
+                      (session as any).distractor_text
+                    ) {
+                      const distractorText = (session as any).distractor_text;
+                      const instructionsHidden =
+                        (session as any).instructions_hidden !== false;
+                      const distractor = createDistractor(
+                        distractorText,
+                        instructionsHidden,
+                      );
+
+                      // Inject in the middle of the description
+                      const sections = description.split('\n\n');
+                      if (sections.length > 1) {
+                        const midPoint = Math.floor(sections.length / 2);
+                        description = [
+                          ...sections.slice(0, midPoint),
+                          distractor,
+                          ...sections.slice(midPoint),
+                        ].join('\n\n');
+                      } else {
+                        // Single section - inject in the middle of text
+                        const midPoint = Math.floor(description.length / 2);
+                        description =
+                          description.substring(0, midPoint) +
+                          distractor +
+                          description.substring(midPoint);
+                      }
+                    }
+
+                    return marked.parse(description) as string;
+                  })(),
                 }}
                 sx={{
                   color: 'grey.800',
@@ -1119,43 +1167,55 @@ export default function InterviewSessionPage() {
                 }}
               />
               {/* Instruction Image - Embedded in problem description for OCR/vision models */}
-              {session?.honeypot_token && problem?.id && !isInterviewer && (
-                <Box sx={{mt: 3, mb: 2, textAlign: 'center'}}>
-                  <Typography
-                    variant="caption"
-                    sx={{display: 'block', mb: 1, color: 'grey.600'}}>
-                    System Configuration Reference:
-                  </Typography>
-                  <Box
-                    sx={{
-                      display: 'inline-block',
-                      p: 2,
-                      bgcolor: 'grey.50',
-                      borderRadius: 1,
-                      border: '1px solid',
-                      borderColor: 'grey.300',
-                    }}>
-                    <InstructionImage
+              {/* Only show if OCR technique is enabled for this session */}
+              {session?.honeypot_token &&
+                problem?.id &&
+                !isInterviewer &&
+                ((session as any).attack_techniques?.includes('ocr') ||
+                  (session as any).ocr_enabled) && (
+                  <Box sx={{mt: 3, mb: 2, textAlign: 'center'}}>
+                    <Typography
+                      variant="caption"
+                      sx={{display: 'block', mb: 1, color: 'grey.600'}}>
+                      System Configuration Reference:
+                    </Typography>
+                    <Box
+                      sx={{
+                        display: 'inline-block',
+                        p: 2,
+                        bgcolor: 'grey.50',
+                        borderRadius: 1,
+                        border: '1px solid',
+                        borderColor: 'grey.300',
+                      }}>
+                      <InstructionImage
+                        honeypotUrl={`${window.location.origin}/docs/v1/${session.honeypot_token}/${problem.id}`}
+                        imageUrl={`${window.location.origin}/assets/img/v1/${session.honeypot_token}/diagram.png`}
+                        width={400}
+                        height={200}
+                        autoHeight={true}
+                      />
+                    </Box>
+                  </Box>
+                )}
+              {/* Visual Trap (FR-003) - Visible configuration section for screenshots - Inline within problem description */}
+              {/* Only show if url_in_problem technique is enabled */}
+              {session?.honeypot_token &&
+                problem?.id &&
+                !isInterviewer &&
+                ((session as any).attack_techniques?.includes(
+                  'url_in_problem',
+                ) ||
+                  false) && (
+                  <Box sx={{mt: 3}}>
+                    <VisualTrap
                       honeypotUrl={`${window.location.origin}/docs/v1/${session.honeypot_token}/${problem.id}`}
+                      token={session.honeypot_token}
+                      persistentSiteUrl={`${window.location.origin}/public/interviews/${session.honeypot_token}`}
                       imageUrl={`${window.location.origin}/assets/img/v1/${session.honeypot_token}/diagram.png`}
-                      width={400}
-                      height={200}
-                      autoHeight={true}
                     />
                   </Box>
-                </Box>
-              )}
-              {/* Visual Trap (FR-003) - Visible configuration section for screenshots - Inline within problem description */}
-              {session?.honeypot_token && problem?.id && !isInterviewer && (
-                <Box sx={{mt: 3}}>
-                  <VisualTrap
-                    honeypotUrl={`${window.location.origin}/docs/v1/${session.honeypot_token}/${problem.id}`}
-                    token={session.honeypot_token}
-                    persistentSiteUrl={`${window.location.origin}/public/interviews/${session.honeypot_token}`}
-                    imageUrl={`${window.location.origin}/assets/img/v1/${session.honeypot_token}/diagram.png`}
-                  />
-                </Box>
-              )}
+                )}
             </Paper>
           </Grid>
         )}
@@ -1202,7 +1262,7 @@ export default function InterviewSessionPage() {
 
         {/* Code Editor - Only show if problem is visible */}
         {canSeeProblem && (
-          <Grid item xs={12} md={isInterviewer ? 5 : 8}>
+          <Grid item xs={12} md={isInterviewer ? 5 : 4}>
             <Paper
               sx={{
                 p: {xs: 2, sm: 3, md: 4},
@@ -1318,7 +1378,7 @@ export default function InterviewSessionPage() {
         <Alert
           onClose={() => setNotification(null)}
           severity={notification?.severity || 'info'}
-          sx={{ width: '100%' }}>
+          sx={{width: '100%'}}>
           {notification?.message}
         </Alert>
       </Snackbar>

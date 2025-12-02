@@ -90,6 +90,12 @@ export interface Database {
           approved: boolean
           candidate_name: string | null
           client_ip: string | null
+          attack_modality: string
+          ocr_enabled: boolean
+          instructions_hidden: boolean
+          attack_techniques: any | null
+          distractor_text: string | null
+          watermark_config: any | null
         }
         Insert: {
           id?: string
@@ -109,6 +115,12 @@ export interface Database {
           approved?: boolean
           candidate_name?: string | null
           client_ip?: string | null
+          attack_modality?: string
+          ocr_enabled?: boolean
+          instructions_hidden?: boolean
+          attack_techniques?: any | null
+          distractor_text?: string | null
+          watermark_config?: any | null
         }
         Update: {
           id?: string
@@ -128,6 +140,12 @@ export interface Database {
           approved?: boolean
           candidate_name?: string | null
           client_ip?: string | null
+          attack_modality?: string
+          ocr_enabled?: boolean
+          instructions_hidden?: boolean
+          attack_techniques?: any | null
+          distractor_text?: string | null
+          watermark_config?: any | null
         }
       }
       solutions: {

@@ -113,7 +113,18 @@ export async function POST(request: NextRequest) {
     const serviceClient = createServiceClient()
     
     const body = await request.json()
-    const { problemId, timeLimit, isPublic, interviewerId } = body
+    const { 
+      problemId, 
+      timeLimit, 
+      isPublic, 
+      interviewerId, 
+      attackModality, 
+      ocrEnabled,
+      attackTechniques,
+      instructionsHidden,
+      distractorText,
+      watermarkConfig
+    } = body
 
     if (!problemId) {
       return NextResponse.json(
@@ -155,6 +166,23 @@ export async function POST(request: NextRequest) {
     // Generate honeypot_token for ALL sessions (token-based canary system)
     const honeypotToken = randomUUID()
 
+    // Determine attack techniques - support both old and new format
+    let finalAttackTechniques: string[] = ['url_visitation_hidden'] // Default
+    if (attackTechniques && Array.isArray(attackTechniques) && attackTechniques.length > 0) {
+      finalAttackTechniques = attackTechniques
+    } else if (attackModality) {
+      // Legacy support: convert old modality to new technique format
+      if (attackModality === 'hyperlink_solution') {
+        finalAttackTechniques = ['hyperlink_solution_hidden']
+      } else {
+        finalAttackTechniques = ['url_visitation_hidden']
+      }
+      // Add OCR if it was enabled
+      if (ocrEnabled) {
+        finalAttackTechniques.push('ocr')
+      }
+    }
+
     // Create session
     const sessionData: Database['public']['Tables']['sessions']['Insert'] = {
       problem_id: problemId,
@@ -168,6 +196,12 @@ export async function POST(request: NextRequest) {
       is_public: isPublic || true, // Default to true if not specified
       interviewer_ready: false, // Interviewer must explicitly start
       interviewee_started: false, // Interviewee starts after interviewer is ready
+      attack_modality: attackModality || 'url_visitation', // Keep for backward compatibility
+      ocr_enabled: finalAttackTechniques.includes('ocr'), // Derived from techniques
+      instructions_hidden: instructionsHidden !== undefined ? instructionsHidden : true,
+      attack_techniques: finalAttackTechniques,
+      distractor_text: distractorText || null,
+      watermark_config: watermarkConfig || null,
     }
     
     // TypeScript inference issue with Supabase insert - using type assertion as workaround

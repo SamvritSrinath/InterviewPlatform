@@ -13,7 +13,7 @@ export async function GET(request: NextRequest) {
 
     let query = serviceClient
       .from('cheating_attempts')
-      .select('*, sessions!inner(interviewer_id, *), problems(*), users(*)');
+      .select('*, sessions!inner(interviewer_id, client_ip), problems(*), users(*)');
 
     // If user is not admin, only show cheating attempts from sessions assigned to them
     if (!user.is_admin) {
@@ -24,6 +24,9 @@ export async function GET(request: NextRequest) {
     if (sessionId) {
       query = query.eq('session_id', sessionId);
     }
+
+    // Filter out tab-switch events - only return copy-paste and honeypot-access
+    query = query.neq('attempt_type', 'tab-switch');
 
     const {data, error} = await query
       .order('detected_at', {ascending: false})

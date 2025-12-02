@@ -16,21 +16,35 @@ import {
   Alert,
   CircularProgress,
   Snackbar,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
+  Collapse,
+  IconButton,
 } from '@mui/material'
-import { ExpandMore, Warning } from '@mui/icons-material'
+import { KeyboardArrowDown, KeyboardArrowUp } from '@mui/icons-material'
+import React from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { RealtimePostgresChangesPayload } from '@supabase/supabase-js'
 import { Database } from '@/lib/supabase/types'
 
 export default function DashboardPage() {
-  // Use a map to group data: { [intervieweeId]: { user: User, sessions: Session[], attempts: Attempt[] } }
-  const [interviewees, setInterviewees] = useState<Record<string, any>>({})
+  // Flat list of interviews with their cheating attempts
+  const [interviews, setInterviews] = useState<Array<{
+    session: any
+    attempts: any[]
+  }>>([])
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [notification, setNotification] = useState<{ message: string; severity: 'error' | 'warning' | 'info' | 'success' } | null>(null)
+  
+  const toggleRow = (sessionId: string) => {
+    const newExpanded = new Set(expandedRows)
+    if (newExpanded.has(sessionId)) {
+      newExpanded.delete(sessionId)
+    } else {
+      newExpanded.add(sessionId)
+    }
+    setExpandedRows(newExpanded)
+  }
 
   useEffect(() => {
     fetchData()
@@ -113,39 +127,30 @@ export default function DashboardPage() {
       const sessions = sessionsData.sessions || []
       const attempts = attemptsData.attempts || []
 
-      // Group by Interviewee
-      const grouped: Record<string, any> = {}
+      // Filter out tab-switch events from attempts
+      const filteredAttempts = attempts.filter((attempt: any) => 
+        attempt.attempt_type !== 'tab-switch'
+      )
 
-      // Process sessions first
-      sessions.forEach((session: any) => {
-        const userId = session.user_id
-        if (!userId) return
-
-        if (!grouped[userId]) {
-          grouped[userId] = {
-            user: session.interviewee,
-            sessions: [],
-            attempts: []
-          }
-        }
-        grouped[userId].sessions.push(session)
+      // Sort sessions by created_at (temporal order, most recent first)
+      const sortedSessions = [...sessions].sort((a: any, b: any) => {
+        const dateA = new Date(a.created_at || a.start_time || 0).getTime()
+        const dateB = new Date(b.created_at || b.start_time || 0).getTime()
+        return dateB - dateA // Descending order
       })
 
-      // Process attempts
-      attempts.forEach((attempt: any) => {
-        const userId = attempt.user_id
-        if (!userId) return
-
-        if (!grouped[userId]) {
-           // Should ideally be populated by sessions, but if session deleted/missing, we might still have attempts
-           // We'll skip for now if no session found, or create a placeholder if we had user info in attempts
-           // In this implementation, we rely on sessions to identify interviewees
-           return
+      // Create flat list: each session with its associated attempts
+      const interviewsList = sortedSessions.map((session: any) => {
+        const sessionAttempts = filteredAttempts.filter((attempt: any) => 
+          attempt.session_id === session.id
+        )
+        return {
+          session,
+          attempts: sessionAttempts
         }
-        grouped[userId].attempts.push(attempt)
       })
 
-      setInterviewees(grouped)
+      setInterviews(interviewsList)
       setError(null)
     } catch (error) {
       console.error('Error fetching data:', error)
@@ -175,99 +180,206 @@ export default function DashboardPage() {
         </Box>
       ) : (
         <Box sx={{ mt: 4 }}>
-          {Object.keys(interviewees).length === 0 ? (
+          {interviews.length === 0 ? (
             <Paper sx={{ p: 4, textAlign: 'center' }}>
-              <Typography color="text.secondary">No interviewees found.</Typography>
+              <Typography color="text.secondary">No interviews found.</Typography>
             </Paper>
           ) : (
-            Object.values(interviewees).map((group: any) => (
-              <Accordion key={group.user?.id || 'unknown'} defaultExpanded>
-                <AccordionSummary expandIcon={<ExpandMore />}>
-                  <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'space-between', pr: 2 }}>
-                    <Box>
-                      <Typography variant="h6">
-                        {group.user?.full_name || group.user?.email || group.sessions[0]?.candidate_name || 'Unknown User'}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {group.user?.email || (group.sessions[0]?.candidate_name ? 'Anonymous Candidate' : 'No ID')}
-                      </Typography>
-                    </Box>
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                      <Chip label={`${group.sessions.length} Sessions`} size="small" />
-                      {group.attempts.length > 0 && (
-                        <Chip 
-                          icon={<Warning />} 
-                          label={`${group.attempts.length} Cheating Alerts`} 
-                          color="error" 
-                          size="small" 
-                        />
-                      )}
-                    </Box>
-                  </Box>
-                </AccordionSummary>
-                <AccordionDetails>
-                  <Typography variant="subtitle2" gutterBottom sx={{ mt: 1 }}>Sessions</Typography>
-                  <TableContainer component={Paper} variant="outlined" sx={{ mb: 3 }}>
-                    <Table size="small">
-                      <TableHead>
+            <TableContainer component={Paper} variant="outlined">
+              <Table>
+                <TableHead>
+                  <TableRow>
+                    <TableCell sx={{ width: 50 }}></TableCell>
+                    <TableCell>Problem</TableCell>
+                    <TableCell>Interviewer</TableCell>
+                    <TableCell>Status</TableCell>
+                    <TableCell>Started At</TableCell>
+                    <TableCell>Client IP</TableCell>
+                    <TableCell>Attack Modality</TableCell>
+                  </TableRow>
+                </TableHead>
+                <TableBody>
+                  {interviews.map(({ session, attempts }) => {
+                    const attackModality = session.attack_modality || 'url_visitation'
+                    const ocrEnabled = session.ocr_enabled || false
+                    const isExpanded = expandedRows.has(session.id)
+                    
+                    // Analyze attempts for LLM detection
+                    const honeypotAttempts = attempts.filter((a: any) => a.attempt_type === 'honeypot-access')
+                    const copyPasteAttempts = attempts.filter((a: any) => a.attempt_type === 'copy-paste')
+                    
+                    // Extract LLM info from honeypot attempts
+                    const llmInfo = honeypotAttempts.map((attempt: any) => {
+                      const userAgent = (attempt.details as any)?.user_agent || 
+                                      (attempt.details as any)?.userAgent || 
+                                      (attempt.exposed_info as any)?.userAgent || 
+                                      (attempt.exposed_info as any)?.user_agent ||
+                                      'Unknown'
+                      
+                      let llmType = 'Unknown'
+                      if (userAgent.includes('GoogleAgent')) {
+                        llmType = 'Google (Bard/Gemini)'
+                      } else if (userAgent.includes('ChatGPT-User') || userAgent.includes('OpenAI')) {
+                        llmType = 'ChatGPT/OpenAI'
+                      } else if (userAgent.includes('Qwen')) {
+                        llmType = 'Qwen'
+                      } else if (userAgent !== 'Unknown') {
+                        llmType = 'LLM (Unknown)'
+                      }
+                      
+                      const detectedIp = (attempt.details as any)?.ip || 
+                                       (attempt.details as any)?.detected_ip || 
+                                       'Unknown'
+                      const intervieweeIp = session.client_ip || 'Unknown'
+                      const ipMismatch = detectedIp !== 'Unknown' && intervieweeIp !== 'Unknown' && detectedIp !== intervieweeIp
+                      
+                      return {
+                        llmType,
+                        userAgent,
+                        detectedIp,
+                        intervieweeIp,
+                        ipMismatch,
+                        timestamp: attempt.detected_at
+                      }
+                    })
+                    
+                    return (
+                      <React.Fragment key={session.id}>
                         <TableRow>
-                          <TableCell>Problem</TableCell>
-                          <TableCell>Status</TableCell>
-                          <TableCell>Started At</TableCell>
-                          <TableCell>IP</TableCell>
+                          <TableCell>
+                            {attempts.length > 0 && (
+                              <IconButton
+                                aria-label="expand row"
+                                size="small"
+                                onClick={() => toggleRow(session.id)}
+                              >
+                                {isExpanded ? <KeyboardArrowUp /> : <KeyboardArrowDown />}
+                              </IconButton>
+                            )}
+                          </TableCell>
+                          <TableCell>{session.problems?.title || 'Unknown Problem'}</TableCell>
+                          <TableCell>
+                            {session.interviewer?.full_name || session.interviewer?.email || 'Unknown'}
+                          </TableCell>
+                          <TableCell>
+                            <Chip 
+                              label={session.session_status} 
+                              size="small" 
+                              color={session.session_status === 'active' ? 'success' : 'default'} 
+                            />
+                          </TableCell>
+                          <TableCell>{new Date(session.start_time || session.created_at).toLocaleString()}</TableCell>
+                          <TableCell>{session.client_ip || 'N/A'}</TableCell>
+                          <TableCell>
+                            <Chip 
+                              label={attackModality === 'hyperlink_solution' ? 'Hyperlink Solution' : 'URL Visitation'} 
+                              size="small" 
+                              color={attackModality === 'hyperlink_solution' ? 'info' : 'default'}
+                            />
+                          </TableCell>
                         </TableRow>
-                      </TableHead>
-                      <TableBody>
-                        {group.sessions.map((session: any) => (
-                          <TableRow key={session.id}>
-                            <TableCell>{session.problems?.title || 'Unknown Problem'}</TableCell>
-                            <TableCell>
-                              <Chip 
-                                label={session.session_status} 
-                                size="small" 
-                                color={session.session_status === 'active' ? 'success' : 'default'} 
-                              />
+                        {attempts.length > 0 && (
+                          <TableRow>
+                            <TableCell colSpan={7} sx={{ py: 0, border: 0 }}>
+                              <Collapse in={isExpanded} timeout="auto" unmountOnExit>
+                                <Box sx={{ p: 2 }}>
+                                  <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600, mb: 2 }}>
+                                    Cheating Attempts ({attempts.length})
+                                  </Typography>
+                                  
+                                  {/* OCR Status */}
+                                  <Box sx={{ mb: 2, display: 'flex', alignItems: 'center', gap: 1 }}>
+                                    <Typography variant="body2" component="span" sx={{ fontWeight: 600 }}>
+                                      OCR Enabled:
+                                    </Typography>
+                                    <Chip label={ocrEnabled ? 'Yes' : 'No'} size="small" color={ocrEnabled ? 'info' : 'default'} />
+                                  </Box>
+                                  
+                                  {/* LLM Detection Section */}
+                                  {honeypotAttempts.length > 0 && (
+                                    <Box sx={{ mb: 3 }}>
+                                      <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600, color: 'error.main' }}>
+                                        LLM Detection ({honeypotAttempts.length} honeypot access{honeypotAttempts.length > 1 ? 'es' : ''})
+                                      </Typography>
+                                      {llmInfo.map((info, idx) => (
+                                        <Alert 
+                                          key={idx} 
+                                          severity={info.llmType !== 'Unknown' ? 'error' : 'warning'} 
+                                          sx={{ mb: 1 }}
+                                        >
+                                          <Typography variant="body2" sx={{ fontWeight: 600 }}>
+                                            {info.llmType !== 'Unknown' ? `LLM Detected: ${info.llmType}` : 'Honeypot Accessed'}
+                                          </Typography>
+                                          <Typography variant="caption" display="block">
+                                            User Agent: {info.userAgent}
+                                          </Typography>
+                                          <Typography variant="caption" display="block">
+                                            Detected IP: {info.detectedIp} | Interviewee IP: {info.intervieweeIp}
+                                          </Typography>
+                                          {info.ipMismatch && (
+                                            <Typography variant="caption" display="block" sx={{ color: 'error.main', fontWeight: 600 }}>
+                                              ⚠️ IP Mismatch - Strong indicator of LLM usage
+                                            </Typography>
+                                          )}
+                                          <Typography variant="caption" display="block" sx={{ mt: 0.5 }}>
+                                            Detected at: {new Date(info.timestamp).toLocaleString()}
+                                          </Typography>
+                                        </Alert>
+                                      ))}
+                                    </Box>
+                                  )}
+                                  
+                                  {/* Copy-Paste Attempts */}
+                                  {copyPasteAttempts.length > 0 && (
+                                    <Box sx={{ mb: 2 }}>
+                                      <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                                        Copy-Paste Events ({copyPasteAttempts.length})
+                                      </Typography>
+                                      {copyPasteAttempts.map((attempt: any) => (
+                                        <Alert key={attempt.id} severity="warning" sx={{ mb: 1 }}>
+                                          <Typography variant="body2">
+                                            Copy-paste detected at: {new Date(attempt.detected_at).toLocaleString()}
+                                          </Typography>
+                                          {attempt.details?.copiedFrom && (
+                                            <Typography variant="caption" display="block">
+                                              Source: {attempt.details.copiedFrom}
+                                            </Typography>
+                                          )}
+                                        </Alert>
+                                      ))}
+                                    </Box>
+                                  )}
+                                  
+                                  {/* Other Attempts */}
+                                  {attempts.filter((a: any) => 
+                                    a.attempt_type !== 'honeypot-access' && a.attempt_type !== 'copy-paste'
+                                  ).length > 0 && (
+                                    <Box>
+                                      <Typography variant="subtitle2" gutterBottom sx={{ fontWeight: 600 }}>
+                                        Other Events
+                                      </Typography>
+                                      {attempts.filter((a: any) => 
+                                        a.attempt_type !== 'honeypot-access' && a.attempt_type !== 'copy-paste'
+                                      ).map((attempt: any) => (
+                                        <Alert key={attempt.id} severity="info" sx={{ mb: 1 }}>
+                                          <Typography variant="body2">
+                                            {attempt.attempt_type} at: {new Date(attempt.detected_at).toLocaleString()}
+                                          </Typography>
+                                        </Alert>
+                                      ))}
+                                    </Box>
+                                  )}
+                                </Box>
+                              </Collapse>
                             </TableCell>
-                            <TableCell>{new Date(session.start_time).toLocaleString()}</TableCell>
-                            <TableCell>{(session as any).client_ip || 'N/A'}</TableCell>
                           </TableRow>
-                        ))}
-                      </TableBody>
-                    </Table>
-                  </TableContainer>
-
-                  {group.attempts.length > 0 && (
-                    <>
-                      <Typography variant="subtitle2" gutterBottom color="error">Cheating Attempts</Typography>
-                      <TableContainer component={Paper} variant="outlined">
-                        <Table size="small">
-                          <TableHead>
-                            <TableRow>
-                              <TableCell>Type</TableCell>
-                              <TableCell>Time</TableCell>
-                              <TableCell>Details</TableCell>
-                            </TableRow>
-                          </TableHead>
-                          <TableBody>
-                            {group.attempts.map((attempt: any) => (
-                              <TableRow key={attempt.id}>
-                                <TableCell>
-                                  <Chip label={attempt.attempt_type} color="error" size="small" />
-                                </TableCell>
-                                <TableCell>{new Date(attempt.detected_at).toLocaleString()}</TableCell>
-                                <TableCell sx={{ maxWidth: 300, overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                  {JSON.stringify(attempt.details)}
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
-                      </TableContainer>
-                    </>
-                  )}
-                </AccordionDetails>
-              </Accordion>
-            ))
+                        )}
+                      </React.Fragment>
+                    )
+                  })}
+                </TableBody>
+              </Table>
+            </TableContainer>
           )}
         </Box>
       )}
