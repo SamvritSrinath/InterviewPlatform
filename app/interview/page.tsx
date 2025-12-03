@@ -397,21 +397,21 @@ export default function InterviewPage() {
                 <FormControlLabel
                   control={
                     <Checkbox
-                      checked={attackTechniques.includes('distractor')}
-                      onChange={() => handleTechniqueToggle('distractor')}
-                    />
-                  }
-                  label="Distractor Injection"
-                  sx={{ mb: 1 }}
-                />
-                <FormControlLabel
-                  control={
-                    <Checkbox
                       checked={attackTechniques.includes('ocr_distractor')}
                       onChange={() => handleTechniqueToggle('ocr_distractor')}
                     />
                   }
                   label="OCR Distractor"
+                  sx={{ mb: 1 }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={attackTechniques.includes('distractor')}
+                      onChange={() => handleTechniqueToggle('distractor')}
+                    />
+                  }
+                  label="Distractor Injection"
                   sx={{ mb: 1 }}
                 />
                 
