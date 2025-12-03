@@ -167,8 +167,9 @@ export async function POST(request: NextRequest) {
     const honeypotToken = randomUUID()
 
     // Determine attack techniques - support both old and new format
-    let finalAttackTechniques: string[] = ['url_visitation_hidden'] // Default
-    if (attackTechniques && Array.isArray(attackTechniques) && attackTechniques.length > 0) {
+    let finalAttackTechniques: string[] = []
+    if (attackTechniques && Array.isArray(attackTechniques)) {
+      // Use provided techniques (even if empty array - allows watermark-only sessions)
       finalAttackTechniques = attackTechniques
     } else if (attackModality) {
       // Legacy support: convert old modality to new technique format
@@ -181,6 +182,39 @@ export async function POST(request: NextRequest) {
       if (ocrEnabled) {
         finalAttackTechniques.push('ocr')
       }
+    } else {
+      // Default to url_visitation_hidden only if no watermark is provided
+      // If watermark is provided without other techniques, allow empty array
+      if (!watermarkConfig) {
+        finalAttackTechniques = ['url_visitation_hidden']
+      }
+    }
+
+    // Determine if instructions should be hidden
+    // Techniques that require hidden instructions (other than watermark):
+    // - url_visitation_hidden: adds hidden URL visitation instructions
+    // - hyperlink_solution_hidden: adds hidden hyperlink solution instructions
+    // - distractor: when instructions_hidden is true, adds hidden distractor
+    const techniquesRequiringHiddenInstructions = [
+      'url_visitation_hidden',
+      'hyperlink_solution_hidden',
+    ]
+    const hasTechniquesRequiringHiddenInstructions = finalAttackTechniques.some(
+      technique => techniquesRequiringHiddenInstructions.includes(technique)
+    )
+    
+    // If only watermark is selected (watermarkConfig provided) and no other techniques
+    // that require hidden instructions are selected, set instructions_hidden to false
+    let finalInstructionsHidden: boolean
+    if (instructionsHidden !== undefined) {
+      // User explicitly set it
+      finalInstructionsHidden = instructionsHidden
+    } else if (watermarkConfig && !hasTechniquesRequiringHiddenInstructions && !finalAttackTechniques.includes('distractor')) {
+      // Only watermark selected - disable hidden instructions (watermark itself is always hidden)
+      finalInstructionsHidden = false
+    } else {
+      // Default to true for backward compatibility
+      finalInstructionsHidden = true
     }
 
     // Create session
@@ -198,7 +232,7 @@ export async function POST(request: NextRequest) {
       interviewee_started: false, // Interviewee starts after interviewer is ready
       attack_modality: attackModality || 'url_visitation', // Keep for backward compatibility
       ocr_enabled: finalAttackTechniques.includes('ocr'), // Derived from techniques
-      instructions_hidden: instructionsHidden !== undefined ? instructionsHidden : true,
+      instructions_hidden: finalInstructionsHidden,
       attack_techniques: finalAttackTechniques,
       distractor_text: distractorText || null,
       watermark_config: watermarkConfig || null,
