@@ -391,7 +391,7 @@ export default function InterviewPage() {
                       onChange={() => handleTechniqueToggle('ocr')}
                     />
                   }
-                  label="OCR (Embed instructions as PNG for vision models)"
+                  label="OCR (Visit URL as PNG)"
                   sx={{ mb: 1 }}
                 />
                 <FormControlLabel
@@ -402,6 +402,16 @@ export default function InterviewPage() {
                     />
                   }
                   label="Distractor Injection"
+                  sx={{ mb: 1 }}
+                />
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={attackTechniques.includes('ocr_distractor')}
+                      onChange={() => handleTechniqueToggle('ocr_distractor')}
+                    />
+                  }
+                  label="OCR Distractor"
                   sx={{ mb: 1 }}
                 />
                 
