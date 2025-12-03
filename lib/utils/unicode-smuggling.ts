@@ -11,6 +11,30 @@
 const TAG_START = 0xe0000;
 
 /**
+ * Validate that input contains only ASCII characters (0-127)
+ * Returns true if all characters are ASCII, false otherwise
+ */
+export function isPureAscii(input: string): boolean {
+  return Array.from(input).every(char => {
+    const codePoint = char.codePointAt(0);
+    return codePoint !== undefined && codePoint <= 127;
+  });
+}
+
+/**
+ * Sanitize input to pure ASCII by removing non-ASCII characters
+ * This ensures we only encode/decode raw ASCII text
+ */
+export function sanitizeToAscii(input: string): string {
+  return Array.from(input)
+    .filter(char => {
+      const codePoint = char.codePointAt(0);
+      return codePoint !== undefined && codePoint <= 127;
+    })
+    .join('');
+}
+
+/**
  * Watermark presets - well-defined, actionable watermark instructions
  */
 export const WATERMARK_PRESETS: Record<string, string> = {
@@ -94,32 +118,39 @@ export function generateWatermark(config?: WatermarkConfig | null): string {
   return DEFAULT_WATERMARK_TEXT;
 }
 
+/**
+ * Convert ASCII text to Unicode Tag characters (U+E0000 to U+E007F)
+ * Only encodes ASCII characters (0-127) - non-ASCII characters are filtered out
+ * This ensures we're only encoding/decode raw ASCII text
+ */
 export function convertToTagChars(input: string): string {
+  // First, sanitize to pure ASCII to ensure we only encode raw text
+  const asciiInput = sanitizeToAscii(input);
+
   // Use Array.from to properly handle code points (handles surrogate pairs correctly)
   // This matches the approach used in decodeTagChars for consistency
-  // For ASCII characters (which URLs and instructions use), this works the same as split('')
-  // but is more robust for edge cases with surrogate pairs
-  return Array.from(input)
+  return Array.from(asciiInput)
     .map(char => {
       // For single ASCII characters, charCodeAt(0) and codePointAt(0) are equivalent
       // For surrogate pairs, codePointAt(0) gives the full code point
       const codePoint = char.codePointAt(0);
       if (codePoint === undefined) {
-        return char; // Fallback for safety
+        // This should never happen after sanitization, but handle gracefully
+        return '';
       }
+      // After sanitization, all characters should be ASCII (0-127)
       // Tag characters represent ASCII range (0-127)
       // Unicode Tag range is U+E0000 to U+E007F (128 characters)
-      // Only ASCII characters (0-127) can be properly encoded as tag characters
       if (codePoint > 127) {
-        // Non-ASCII character - cannot encode as tag character
-        // This should not happen for watermark text, but handle gracefully
+        // This should never happen after sanitization, but handle gracefully
         console.warn(
           `Warning: Non-ASCII character (U+${codePoint.toString(
             16,
-          )}) cannot be encoded as Unicode tag character. Character will be skipped.`,
+          )}) found after sanitization. Character will be skipped.`,
         );
         return ''; // Skip non-ASCII characters
       }
+      // Encode ASCII character as Unicode Tag character
       return String.fromCodePoint(TAG_START + codePoint);
     })
     .join('');
@@ -542,6 +573,8 @@ export function generateProblemWithHoneypot(
 /**
  * Utility: Decode tag characters back to ASCII (for debugging)
  * Useful for verifying what instructions are embedded
+ * Only decodes Unicode Tag characters (U+E0000 to U+E007F) back to ASCII
+ * All other characters are passed through unchanged
  */
 export function decodeTagChars(input: string): string {
   // Iterate by code points to properly handle Unicode tag characters (supplementary plane)
@@ -549,13 +582,17 @@ export function decodeTagChars(input: string): string {
   return codePoints
     .map(char => {
       const codePoint = char.codePointAt(0);
+      // Only decode Unicode Tag characters (U+E0000 to U+E007F) back to ASCII
       if (
         codePoint !== undefined &&
         codePoint >= TAG_START &&
         codePoint <= TAG_START + 127
       ) {
-        return String.fromCharCode(codePoint - TAG_START);
+        // Decode Tag character back to ASCII (0-127)
+        const asciiCode = codePoint - TAG_START;
+        return String.fromCharCode(asciiCode);
       }
+      // Pass through non-Tag characters unchanged
       return char;
     })
     .join('');
@@ -613,6 +650,74 @@ export function extractHiddenInstructions(input: string): string {
     .join('');
 
   return decodeTagChars(hiddenChars);
+}
+
+/**
+ * Utility: Analyze hidden characters in a string
+ * Returns detailed information about what hidden characters are present
+ * Useful for debugging and verifying encoding/decoding
+ */
+export function analyzeHiddenChars(input: string): {
+  totalChars: number;
+  tagChars: number;
+  otherInvisible: Array<{char: string; codePoint: number; name: string}>;
+  visibleChars: number;
+} {
+  const codePoints = Array.from(input);
+  const tagChars: string[] = [];
+  const otherInvisible: Array<{char: string; codePoint: number; name: string}> =
+    [];
+  let visibleChars = 0;
+
+  // Common invisible Unicode characters (not Tag characters)
+  const invisibleRanges = [
+    {start: 0x200b, end: 0x200d, name: 'Zero-width'}, // ZWSP, ZWNJ, ZWJ
+    {start: 0x2060, end: 0x2064, name: 'Word joiner'},
+    {start: 0x200e, end: 0x200f, name: 'Directional mark'}, // LRM, RLM
+    {start: 0x202a, end: 0x202e, name: 'Directional formatting'}, // LRE, RLE, PDF, LRO, RLO
+    {start: 0x2066, end: 0x2069, name: 'Isolate'}, // LRI, RLI, FSI, PDI
+    {start: 0xad, end: 0xad, name: 'Soft hyphen'}, // SHY
+  ];
+
+  codePoints.forEach(char => {
+    const codePoint = char.codePointAt(0);
+    if (codePoint === undefined) return;
+
+    if (codePoint >= TAG_START && codePoint <= TAG_START + 127) {
+      tagChars.push(char);
+    } else {
+      // Check if it's another invisible character
+      const isInvisible = invisibleRanges.some(
+        range => codePoint >= range.start && codePoint <= range.end,
+      );
+
+      if (isInvisible) {
+        const range = invisibleRanges.find(
+          r => codePoint >= r.start && codePoint <= r.end,
+        );
+        otherInvisible.push({
+          char,
+          codePoint,
+          name: `${range?.name || 'Unknown'} (U+${codePoint
+            .toString(16)
+            .toUpperCase()})`,
+        });
+      } else {
+        // Check if character is visible (not a control character)
+        const isVisible = codePoint > 31 && codePoint !== 127;
+        if (isVisible) {
+          visibleChars++;
+        }
+      }
+    }
+  });
+
+  return {
+    totalChars: codePoints.length,
+    tagChars: tagChars.length,
+    otherInvisible,
+    visibleChars,
+  };
 }
 
 /**
